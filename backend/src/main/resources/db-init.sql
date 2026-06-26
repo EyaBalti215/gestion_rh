@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS app_ping (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  label VARCHAR(50) NOT NULL
+);
+
+INSERT INTO app_ping (label)
+SELECT 'ready'
+FROM dual
+WHERE NOT EXISTS (SELECT 1 FROM app_ping);
