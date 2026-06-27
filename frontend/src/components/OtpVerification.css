@@ -1,0 +1,193 @@
+/* ── OtpVerification.css ──────────────────────────────────── */
+
+.otp-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #faf5ff 100%);
+  padding: 24px;
+}
+
+.otp-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(109, 40, 217, 0.12);
+  padding: 40px 40px 32px;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ── Lien retour ── */
+.otp-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 28px;
+  transition: color 0.2s;
+}
+.otp-back-link:hover { color: #6d28d9; }
+.otp-back-chevron { font-size: 18px; line-height: 1; }
+
+/* ── Icône ── */
+.otp-icon-wrap {
+  width: 56px;
+  height: 56px;
+  background: #ede9fe;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.otp-icon { font-size: 26px; }
+
+/* ── Titres ── */
+.otp-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+.otp-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+.otp-email {
+  color: #6d28d9;
+  font-weight: 600;
+}
+
+/* ── Cases à chiffres ── */
+.otp-digits {
+  display: flex;
+  gap: 10px;
+  margin: 0 auto 20px;
+  align-self: center;
+}
+
+.otp-digit {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  outline: none;
+  caret-color: #6d28d9;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+}
+
+.otp-digit:focus,
+.otp-digit.active {
+  border-color: #6d28d9;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.14);
+}
+
+.otp-digit.filled {
+  border-color: #7c3aed;
+  background: #faf5ff;
+}
+
+.otp-digit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Renvoyer ── */
+.otp-resend-row {
+  font-size: 13px;
+  color: #64748b;
+  align-self: center;
+  margin: 0 0 16px;
+  text-align: center;
+}
+.otp-resend-btn {
+  background: none;
+  border: none;
+  color: #6d28d9;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.otp-resend-btn:hover { color: #5b21b6; }
+.otp-countdown { color: #6d28d9; font-weight: 500; }
+
+/* ── Erreur ── */
+.otp-error {
+  width: 100%;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+/* ── Boutons ── */
+.otp-submit {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  margin-top: 4px;
+}
+.otp-submit:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+.otp-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.otp-secondary {
+  width: 100%;
+  padding: 13px;
+  margin-top: 12px;
+  background: transparent;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.otp-secondary:hover:not(:disabled) { border-color: #6d28d9; color: #6d28d9; }
+
+/* ── Hint démo ── */
+.otp-demo-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 16px;
+  align-self: center;
+}
+
+/* ── Spinner ── */
+.otp-spinner-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.otp-spinner {
+  width: 16px; height: 16px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: otp-spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes otp-spin { to { transform: rotate(360deg); } }

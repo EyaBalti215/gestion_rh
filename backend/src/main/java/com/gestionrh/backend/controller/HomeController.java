@@ -1,4 +1,4 @@
-package com.gestionrh.backend;
+package com.gestionrh.backend.controller;
 
 import java.util.Map;
 

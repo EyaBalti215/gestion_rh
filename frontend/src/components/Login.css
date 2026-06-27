@@ -1,0 +1,330 @@
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Shell : deux colonnes pleine hauteur ── */
+.login-shell {
+  display: grid;
+  grid-template-columns: 52% 48%;
+  min-height: 100vh;
+}
+
+/* ── Panel gauche (violet dégradé) ── */
+.login-panel-left {
+  background: linear-gradient(135deg, #4338ca 0%, #5b4ee8 40%, #6366f1 70%, #7c7ef5 100%);
+  color: #fff;
+  padding: 56px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cercles décoratifs */
+.login-panel-left::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -90px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+}
+
+.login-panel-left::after {
+  content: '';
+  position: absolute;
+  bottom: -100px;
+  left: -60px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+}
+
+.left-content {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+
+.brand-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.2);
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.15);
+}
+
+.brand-copy {
+  text-align: center;
+  display: grid;
+  gap: 18px;
+  align-items: center;
+}
+
+.brand-title {
+  font-size: 3.4rem;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  text-align: center;
+  margin: 0;
+}
+
+.brand-subtitle {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.8;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+/* Features */
+.left-features {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.16);
+  display: grid;
+  place-items: center;
+  font-size: 1.05rem;
+}
+
+/* ── Panel droit (gris clair) ── */
+.login-panel-right {
+  background: #f5f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 44px;
+}
+
+/* ── Carte formulaire ── */
+.login-card {
+  width: 100%;
+  max-width: 430px;
+  background: #ffffff;
+  border-radius: 34px;
+  padding: 38px;
+  box-shadow: 0 30px 80px rgba(15,23,42,0.08);
+}
+
+.login-card-head {
+  margin-bottom: 24px;
+}
+
+.login-card-head h2 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.02;
+  margin-bottom: 10px;
+}
+
+.login-card-subtitle {
+  font-size: 0.98rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* ── Onglets rôle ── */
+.role-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #eef2ff;
+  border-radius: 999px;
+  padding: 6px;
+  margin-bottom: 26px;
+}
+
+.role-tab {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #eef2ff;
+  color: #64748b;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.role-tab.active {
+  background: #ffffff;
+  color: #4338ca;
+  box-shadow: 0 18px 36px rgba(67,56,202,0.12);
+}
+
+/* ── Formulaire ── */
+.login-form { display: grid; gap: 18px; }
+
+.login-label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1.5px solid #dde1ee;
+  transition: border-color 0.15s;
+}
+
+.input-wrapper:focus-within {
+  border-color: #6366f1;
+}
+
+.input-icon { font-size: 16px; color: #94a3b8; }
+
+.login-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+.login-input::placeholder { color: #94a3b8; }
+
+/* ── Options (checkbox + lien) ── */
+.login-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #334155;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: 16px;
+  height: 16px;
+  accent-color: #4338ca;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  color: #4338ca;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+/* ── Erreur ── */
+.login-error {
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  font-size: 0.9rem;
+}
+
+/* ── Bouton Se connecter ── */
+.login-submit {
+  width: 100%;
+  border: none;
+  border-radius: 18px;
+  padding: 16px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(90deg, #4338ca, #6366f1);
+  color: #fff;
+  margin-top: 6px;
+  box-shadow: 0 18px 36px rgba(67,56,202,0.18);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.login-submit:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+/* ── Footer ── */
+.login-footer {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.login-footer button {
+  color: #4338ca;
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-copy {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+/* Boutons */
+.login-buttons{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.login-home{
+  width:100%;
+  border:none;
+  border-radius:18px;
+  padding:16px 20px;
+  font-size:1rem;
+  font-weight:700;
+  cursor:pointer;
+  background:#64748b;
+  color:#fff;
+  transition:.2s;
+}
+
+.login-home:hover{
+  background:#475569;
+}

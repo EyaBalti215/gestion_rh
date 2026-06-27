@@ -1,7 +1,7 @@
 import React from 'react';
 import './Home.css';
 
-export default function Home() {
+export default function Home({ onLoginClick, onRegisterClick }) {
   return (
     <div className="home-root">
 
@@ -17,8 +17,8 @@ export default function Home() {
           <li><a href="#metrics">Chiffres clés</a></li>
         </ul>
         <div className="navbar-actions">
-          <button className="link">Créer un compte</button>
-          <button className="btn-connect">Se connecter</button>
+          <button className="link" type="button" onClick={onRegisterClick}>Créer un compte</button>
+          <button className="btn-connect" type="button" onClick={onLoginClick}>Se connecter</button>
         </div>
       </nav>
 
@@ -37,8 +37,8 @@ export default function Home() {
             et professionnelle.
           </p>
           <div className="cta-row">
-            <button className="btn-primary">Accéder à l'application &nbsp;›</button>
-            <button className="btn-ghost">
+            <button className="btn-primary" type="button" onClick={onLoginClick}>Accéder à l'application &nbsp;›</button>
+            <button className="btn-ghost" type="button" onClick={onRegisterClick}>
               <span>👤</span> Créer un compte employé
             </button>
           </div>
@@ -94,7 +94,7 @@ export default function Home() {
               <div className="dash-card violet-bg">
                 <div className="dash-icon violet-c">📊</div>
                 <div>
-                  <div className="dash-val">34 130 DA</div>
+                  <div className="dash-val">34 130 TND</div>
                   <div className="dash-lbl">Résultat net</div>
                 </div>
               </div>
@@ -243,7 +243,13 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <button className="btn-admin-connect">Connexion Admin &nbsp;›</button>
+           <button
+  className="btn-admin-connect"
+  type="button"
+  onClick={onLoginClick}
+>
+  Connexion Admin &nbsp;›
+</button>
           </div>
 
           {/* Employee */}
@@ -268,8 +274,20 @@ export default function Home() {
               ))}
             </ul>
             <div className="profile-actions">
-              <button className="btn-outline">Connexion</button>
-              <button className="btn-dark">S'inscrire</button>
+             <button
+  className="btn-outline"
+  type="button"
+  onClick={onLoginClick}
+>
+  Connexion
+</button>
+            <button
+  className="btn-dark"
+  type="button"
+  onClick={onRegisterClick}
+>
+  S'inscrire
+</button>
             </div>
           </div>
         </div>
@@ -283,10 +301,20 @@ export default function Home() {
           Démarrez dès maintenant avec HRFlow et automatisez vos processus RH et financiers.
         </p>
         <div className="cta-row">
-          <button className="btn-primary">Accéder à l'application &nbsp;›</button>
-          <button className="btn-ghost">
-            <span>👤</span> Créer un compte
-          </button>
+       <button
+  className="btn-primary"
+  type="button"
+  onClick={onLoginClick}
+>
+  Accéder à l'application &nbsp;›
+</button>
+        <button
+  className="btn-ghost"
+  type="button"
+  onClick={onRegisterClick}
+>
+  <span>👤</span> Créer un compte
+</button>
         </div>
       </section>
 
@@ -295,7 +323,7 @@ export default function Home() {
         <div className="site-footer-brand">
           <div className="navbar-logo">🏢</div>
           <span>HRFlow</span>
-          <span className="site-footer-version">v2.0</span>
+          <span className="site-footer-version"></span>
         </div>
         <div className="site-footer-copy">
           © 2026 HRFlow — Système de Gestion Intégré RH &amp; Finances. Tous droits réservés.
