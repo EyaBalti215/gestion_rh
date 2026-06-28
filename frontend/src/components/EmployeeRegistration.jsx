@@ -1,60 +1,54 @@
 import React, { useState } from 'react';
-import './EmployeeRegistration.css';
+import '../components/EmployeeRegistration.css';
 
 export default function EmployeeRegistration({ onCancel, onSuccess }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Step 1: Identity
     prenom: '',
     nom: '',
     email: '',
     telephone: '',
     adresse: '',
-    // Step 2: Position & Contract
     poste: '',
     typeContrat: 'CDI',
-    salaire: '',
     modeReglement: 'Virement bancaire',
     rib: '',
-    // Step 3: Security
     motDePasse: '',
     confirmMotDePasse: '',
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors]           = useState({});
+  const [isLoading, setIsLoading]     = useState(false);
+  const [successData, setSuccessData] = useState(null);
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    // Clear error for this field when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
   const validateStep = (step) => {
     const newErrors = {};
 
     if (step === 1) {
-      if (!formData.prenom.trim()) newErrors.prenom = 'Le prénom est requis';
-      if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis';
+      if (!formData.prenom.trim())    newErrors.prenom    = 'Le prénom est requis';
+      if (!formData.nom.trim())       newErrors.nom       = 'Le nom est requis';
       if (!formData.email.trim()) {
-        newErrors.email = 'L\'e-mail est requis';
+        newErrors.email = "L'e-mail est requis";
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = 'L\'e-mail n\'est pas valide';
+        newErrors.email = "L'e-mail n'est pas valide";
       }
       if (!formData.telephone.trim()) newErrors.telephone = 'Le téléphone est requis';
-      if (!formData.adresse.trim()) newErrors.adresse = 'L\'adresse est requise';
-    } else if (step === 2) {
+      if (!formData.adresse.trim())   newErrors.adresse   = "L'adresse est requise";
+    }
+
+    if (step === 2) {
       if (!formData.poste.trim()) newErrors.poste = 'Le poste souhaité est requis';
-      if (!formData.salaire.trim()) newErrors.salaire = 'Le salaire est requis';
-      if (!formData.rib.trim()) newErrors.rib = 'Le RIB/IBAN est requis';
-    } else if (step === 3) {
+      if (!formData.rib.trim())   newErrors.rib   = 'Le RIB/IBAN est requis';
+    }
+
+    if (step === 3) {
       if (!formData.motDePasse.trim()) {
         newErrors.motDePasse = 'Le mot de passe est requis';
       } else if (formData.motDePasse.length < 8) {
@@ -71,33 +65,121 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => prev + 1);
+  const handleNext     = () => { if (validateStep(currentStep)) setCurrentStep(p => p + 1); };
+  const handlePrevious = () => setCurrentStep(p => p - 1);
+
+  // ── Soumission → API ────────────────────────────────────────────────────────
+
+  const handleSubmit = async () => {
+    if (!validateStep(currentStep)) return;
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        prenom:        formData.prenom,
+        nom:           formData.nom,
+        email:         formData.email,
+        telephone:     formData.telephone,
+        adresse:       formData.adresse,
+        poste:         formData.poste,
+        typeContrat:   formData.typeContrat,
+        modeReglement: formData.modeReglement,
+        rib:           formData.rib,
+        motDePasse:    formData.motDePasse,
+      };
+
+      const response = await fetch('http://localhost:8080/api/employees/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrors({ general: data.error || 'Une erreur est survenue.' });
+        return;
+      }
+
+      setSuccessData(data);
+
+    } catch (err) {
+      setErrors({ general: 'Impossible de contacter le serveur. Réessayez.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePrevious = () => {
-    setCurrentStep(prev => prev - 1);
-  };
+  // ── Écran de bienvenue (même carte, même style) ──────────────────────────────
 
-  const handleSubmit = () => {
-    if (validateStep(currentStep)) {
-      console.log('Inscription complétée:', formData);
-      // Here you would typically send the data to your backend
-      onSuccess();
-    }
-  };
+  if (successData) {
+    return (
+      <main className="registration-container">
+        <div className="registration-card">
+          <div className="registration-header">
+            <div>
+              <h1>Inscription Employé</h1>
+              <p className="registration-subtitle">Créez votre compte — validation par l'administrateur requise</p>
+            </div>
+          </div>
+
+          <div className="step-content">
+            <div className="step-panel">
+              <div className="step-icon">🎉</div>
+              <h2>Demande soumise avec succès !</h2>
+              <p className="step-subtitle">
+                Bienvenue, <strong>{successData.prenom} {successData.nom}</strong>
+              </p>
+
+              <div className="security-info" style={{ marginTop: '16px', background: '#f0fdf4', borderColor: '#86efac' }}>
+                <span className="info-icon">✅</span>
+                <span className="info-text" style={{ color: '#166534' }}>
+                  <strong style={{ color: '#15803d' }}>Votre compte a été créé.</strong>{' '}
+                  Vous devez attendre la validation de l'administrateur pour accéder à votre plateforme.
+                  Un e-mail de confirmation vous sera envoyé dès l'approbation.
+                </span>
+              </div>
+
+              <div className="security-info" style={{ marginTop: '12px' }}>
+                <span className="info-icon">ℹ</span>
+                <span className="info-text">
+                  <strong>E-mail enregistré :</strong> {successData.email}
+                  <br />
+                  <strong>Statut :</strong> En attente de validation
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="registration-actions">
+            <div className="flex-spacer" />
+            <button
+              className="btn-success"
+              type="button"
+              onClick={() => onSuccess && onSuccess()}
+            >
+              Retour à l'accueil
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── Formulaire multi-étapes ─────────────────────────────────────────────────
 
   return (
     <main className="registration-container">
       <div className="registration-card">
+
         {/* Header */}
         <div className="registration-header">
           <button className="back-button" onClick={onCancel}>‹</button>
           <div>
             <h1>Inscription Employé</h1>
-            <p className="registration-subtitle">Créez votre compte — validation par l'administrateur requise</p>
+            <p className="registration-subtitle">
+              Créez votre compte — validation par l'administrateur requise
+            </p>
           </div>
         </div>
 
@@ -125,8 +207,25 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
           </div>
         </div>
 
+        {/* Erreur globale */}
+        {errors.general && (
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            fontSize: '14px'
+          }}>
+            ⚠ {errors.general}
+          </div>
+        )}
+
         {/* Step Content */}
         <div className="step-content">
+
+          {/* ── Étape 1 : Identité ── */}
           {currentStep === 1 && (
             <div className="step-panel">
               <div className="step-icon">👤</div>
@@ -177,7 +276,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="telephone">Téléphone</label>
+                <label htmlFor="telephone">Téléphone <span className="required-star">*</span></label>
                 <div className="input-wrapper">
                   <span className="input-icon">📱</span>
                   <input
@@ -193,7 +292,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="adresse">Adresse de résidence</label>
+                <label htmlFor="adresse">Adresse de résidence <span className="required-star">*</span></label>
                 <div className="input-wrapper">
                   <span className="input-icon">📍</span>
                   <input
@@ -210,6 +309,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
             </div>
           )}
 
+          {/* ── Étape 2 : Poste & Contrat ── */}
           {currentStep === 2 && (
             <div className="step-panel">
               <div className="step-icon">👔</div>
@@ -243,18 +343,6 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
                     <option value="Stage">Stage</option>
                     <option value="Alternance">Alternance</option>
                   </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="salaire">Salaire souhaité (DA) <span className="required-star">*</span></label>
-                  <input
-                    id="salaire"
-                    type="number"
-                    placeholder="Ex: 45000"
-                    value={formData.salaire}
-                    onChange={(e) => handleInputChange('salaire', e.target.value)}
-                    className={errors.salaire ? 'form-input error' : 'form-input'}
-                  />
-                  {errors.salaire && <span className="error-message">{errors.salaire}</span>}
                 </div>
               </div>
 
@@ -290,6 +378,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
             </div>
           )}
 
+          {/* ── Étape 3 : Sécurité ── */}
           {currentStep === 3 && (
             <div className="step-panel">
               <div className="step-icon">🔒</div>
@@ -330,7 +419,10 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
 
               <div className="security-info">
                 <span className="info-icon">ℹ</span>
-                <span className="info-text"><strong>Validation requise :</strong> Votre compte sera activé après validation par un administrateur. Vous recevrez un e-mail de confirmation.</span>
+                <span className="info-text">
+                  <strong>Validation requise :</strong> Votre compte sera activé après validation
+                  par un administrateur. Vous recevrez un e-mail de confirmation.
+                </span>
               </div>
             </div>
           )}
@@ -339,7 +431,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
         {/* Action Buttons */}
         <div className="registration-actions">
           {currentStep > 1 && (
-            <button className="btn-secondary" type="button" onClick={handlePrevious}>
+            <button className="btn-secondary" type="button" onClick={handlePrevious} disabled={isLoading}>
               ‹ Précédent
             </button>
           )}
@@ -350,11 +442,12 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
             </button>
           )}
           {currentStep === 3 && (
-            <button className="btn-success" type="button" onClick={handleSubmit}>
-              ✈ Soumettre ma demande
+            <button className="btn-success" type="button" onClick={handleSubmit} disabled={isLoading}>
+              {isLoading ? '⏳ Envoi en cours...' : '✈ Soumettre ma demande'}
             </button>
           )}
         </div>
+
       </div>
     </main>
   );

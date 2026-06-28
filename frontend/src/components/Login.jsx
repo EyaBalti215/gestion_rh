@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import './Login.css';
+import NewPassword from './NewPassword';
 
 // ─────────────────────────────────────────────────────────────
 // CONSTANTES
@@ -45,13 +46,11 @@ function ViewLogin({ onCancel, onRegisterClick, onForgotPassword, onCredentialsO
       return;
     }
 
-    // Vérification des identifiants
     if (normalizedEmail !== demoUsers.admin.email || password !== demoUsers.admin.password) {
       setError("Identifiants invalides ou accès réservé à l'administrateur.");
       return;
     }
 
-    // Identifiants corrects → envoyer OTP puis afficher la page de vérification
     setLoading(true);
     setError('');
     try {
@@ -62,7 +61,6 @@ function ViewLogin({ onCancel, onRegisterClick, onForgotPassword, onCredentialsO
       });
       const data = await res.json();
       if (data.success) {
-        // Passer à la vue OTP avec les infos de l'utilisateur
         onCredentialsOk({ role: 'admin', name: 'Admin Système', email: normalizedEmail });
       } else {
         setError(data.message || "Impossible d'envoyer le code de vérification.");
@@ -477,48 +475,53 @@ function ViewOtpVerification({ email, context, onBack, onVerified }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// COMPOSANT PRINCIPAL EXPORTÉ — gère les 4 vues en interne
+// COMPOSANT PRINCIPAL EXPORTÉ
 // ─────────────────────────────────────────────────────────────
 //
 // FLUX "Se connecter" :
-//   login → (identifiants ok + OTP envoyé) → otp-login → onLogin()
+//   login → otp-login (OTP envoyé) → onLogin()
 //
 // FLUX "Mot de passe oublié" :
-//   login → forgot → otp-forgot → retour login
+//   login → forgot → otp-forgot → new-password → login
 //
 export default function Login({ onLogin, onCancel, onRegisterClick }) {
-  // 'login' | 'forgot' | 'otp-login' | 'otp-forgot'
-  const [view, setView]         = useState('login');
-  const [otpEmail, setOtpEmail] = useState('');
-  const [pendingUser, setPendingUser] = useState(null); // stocke les infos user en attente de validation OTP
+  // 'login' | 'forgot' | 'otp-login' | 'otp-forgot' | 'new-password'
+  const [view, setView]               = useState('login');
+  const [otpEmail, setOtpEmail]       = useState('');
+  const [pendingUser, setPendingUser] = useState(null);
 
-  // ── Depuis ViewLogin : identifiants ok, OTP envoyé ──────────
+  // ── Identifiants ok → OTP envoyé → vue OTP connexion ────────
   const handleCredentialsOk = (userData) => {
     setPendingUser(userData);
     setOtpEmail(userData.email);
     setView('otp-login');
   };
 
-  // ── Depuis ViewLogin : clic "Mot de passe oublié" ───────────
+  // ── Clic "Mot de passe oublié" ───────────────────────────────
   const handleForgotPassword = (prefillEmail) => {
     setOtpEmail(prefillEmail || '');
     setView('forgot');
   };
 
-  // ── Depuis ViewForgotPassword : OTP envoyé ──────────────────
+  // ── OTP envoyé depuis la vue "Mot de passe oublié" ───────────
   const handleOtpSent = (email) => {
     setOtpEmail(email);
     setView('otp-forgot');
   };
 
-  // ── OTP validé après connexion → accès accordé ──────────────
+  // ── OTP validé (connexion) → accès dashboard ─────────────────
   const handleLoginOtpVerified = () => {
     onLogin(pendingUser);
   };
 
-  // ── OTP validé après mot de passe oublié → retour login ─────
-  const handleForgotOtpVerified = (email) => {
-    alert(`✅ Identité vérifiée pour ${email}.\nVous pouvez maintenant vous reconnecter.`);
+  // ── OTP validé (mot de passe oublié) → saisie nouveau mdp ───
+  const handleForgotOtpVerified = () => {
+    setView('new-password');
+  };
+
+  // ── Nouveau mot de passe enregistré → retour connexion ───────
+  const handlePasswordReset = () => {
+    alert('✅ Mot de passe réinitialisé avec succès !\nVous pouvez maintenant vous connecter.');
     setView('login');
   };
 
@@ -533,7 +536,7 @@ export default function Login({ onLogin, onCancel, onRegisterClick }) {
     );
   }
 
-  // ── VUE : OTP après connexion ────────────────────────────────
+  // ── VUE : OTP connexion ───────────────────────────────────────
   if (view === 'otp-login') {
     return (
       <ViewOtpVerification
@@ -545,7 +548,7 @@ export default function Login({ onLogin, onCancel, onRegisterClick }) {
     );
   }
 
-  // ── VUE : OTP après "mot de passe oublié" ────────────────────
+  // ── VUE : OTP mot de passe oublié ────────────────────────────
   if (view === 'otp-forgot') {
     return (
       <ViewOtpVerification
@@ -553,6 +556,16 @@ export default function Login({ onLogin, onCancel, onRegisterClick }) {
         context="forgot"
         onBack={() => setView('forgot')}
         onVerified={handleForgotOtpVerified}
+      />
+    );
+  }
+
+  // ── VUE : Nouveau mot de passe ────────────────────────────────
+  if (view === 'new-password') {
+    return (
+      <NewPassword
+        onBack={() => setView('login')}
+        onSuccess={handlePasswordReset}
       />
     );
   }
