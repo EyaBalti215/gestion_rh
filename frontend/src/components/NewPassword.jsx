@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './NewPassword.css';
+import '../components/NewPassword.css';
 
 // ── Calcul force du mot de passe ─────────────────────────────
 function getStrength(pwd) {
@@ -18,7 +18,7 @@ function getStrength(pwd) {
   return             { level: 5, label: 'Très fort',    color: '#16a34a' };
 }
 
-export default function NewPassword({ onBack, onSuccess }) {
+export default function NewPassword({ email, onBack, onSuccess }) {
   const [password, setPassword]   = useState('');
   const [confirm, setConfirm]     = useState('');
   const [showPwd, setShowPwd]     = useState(false);
@@ -32,6 +32,10 @@ export default function NewPassword({ onBack, onSuccess }) {
     e.preventDefault();
     setError('');
 
+    if (!email || !email.trim()) {
+      setError('Adresse e-mail introuvable. Revenez en arrière et recommencez.');
+      return;
+    }
     if (password.length < 8) {
       setError('Le mot de passe doit contenir au moins 8 caractères.');
       return;
@@ -42,10 +46,28 @@ export default function NewPassword({ onBack, onSuccess }) {
     }
 
     setLoading(true);
-    // Simulation (dans une vraie app : appel API PATCH /api/password/reset)
-    await new Promise((r) => setTimeout(r, 1000));
-    setLoading(false);
-    onSuccess();
+    try {
+      const res = await fetch('http://localhost:8080/api/password/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          nouveauMotDePasse: password,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.message || "Impossible de réinitialiser le mot de passe.");
+        return;
+      }
+
+      onSuccess();
+    } catch {
+      setError('Erreur réseau. Vérifiez que le serveur est démarré.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

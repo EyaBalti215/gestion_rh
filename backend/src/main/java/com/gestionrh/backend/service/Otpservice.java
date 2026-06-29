@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Otpservice {
     // Stockage en mémoire : email -> {code, expiration}
     private final Map<String, OtpEntry> otpStore = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> verifiedOtpStore = new ConcurrentHashMap<>();
  
     private static final int OTP_LENGTH = 6;
     private static final int OTP_EXPIRY_MINUTES = 5;
@@ -32,19 +33,38 @@ public class Otpservice {
     }
  
     public boolean validateOtp(String email, String code) {
-        OtpEntry entry = otpStore.get(email.toLowerCase());
+        String key = email.toLowerCase();
+        OtpEntry entry = otpStore.get(key);
         if (entry == null) return false;
         if (LocalDateTime.now().isAfter(entry.expiration())) {
-            otpStore.remove(email.toLowerCase());
+            otpStore.remove(key);
             return false;
         }
         boolean valid = entry.code().equals(code);
         if (valid) {
-            otpStore.remove(email.toLowerCase());
+            otpStore.remove(key);
+            verifiedOtpStore.put(key, LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES));
         }
         return valid;
     }
- 
+
+    public boolean isEmailOtpVerified(String email) {
+        String key = email.toLowerCase();
+        LocalDateTime expiration = verifiedOtpStore.get(key);
+        if (expiration == null) {
+            return false;
+        }
+        if (LocalDateTime.now().isAfter(expiration)) {
+            verifiedOtpStore.remove(key);
+            return false;
+        }
+        return true;
+    }
+
+    public void consumeVerifiedEmail(String email) {
+        verifiedOtpStore.remove(email.toLowerCase());
+    }
+
     private record OtpEntry(String code, LocalDateTime expiration) {}
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../components/EmployeeRegistration.css';
+import './EmployeeRegistration.css';
 
 export default function EmployeeRegistration({ onCancel, onSuccess }) {
   const [currentStep, setCurrentStep] = useState(1);

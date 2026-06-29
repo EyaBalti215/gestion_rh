@@ -1,7 +1,7 @@
 import React from 'react';
 import './Home.css';
 
-export default function Home({ onLoginClick, onRegisterClick }) {
+export default function Home({ onAdminLogin, onEmployeeLogin, onEmployeeRegister }) {
   return (
     <div className="home-root">
 
@@ -17,8 +17,8 @@ export default function Home({ onLoginClick, onRegisterClick }) {
           <li><a href="#metrics">Chiffres clés</a></li>
         </ul>
         <div className="navbar-actions">
-          <button className="link" type="button" onClick={onRegisterClick}>Créer un compte</button>
-          <button className="btn-connect" type="button" onClick={onLoginClick}>Se connecter</button>
+          <button className="link" type="button" onClick={onEmployeeRegister}>Créer un compte</button>
+          <button className="btn-connect" type="button" onClick={onEmployeeLogin}>Se connecter</button>
         </div>
       </nav>
 
@@ -37,8 +37,8 @@ export default function Home({ onLoginClick, onRegisterClick }) {
             et professionnelle.
           </p>
           <div className="cta-row">
-            <button className="btn-primary" type="button" onClick={onLoginClick}>Accéder à l'application &nbsp;›</button>
-            <button className="btn-ghost" type="button" onClick={onRegisterClick}>
+            <button className="btn-primary" type="button" onClick={onEmployeeLogin}>Accéder à l'application &nbsp;›</button>
+            <button className="btn-ghost" type="button" onClick={onEmployeeRegister}>
               <span>👤</span> Créer un compte employé
             </button>
           </div>
@@ -246,7 +246,7 @@ export default function Home({ onLoginClick, onRegisterClick }) {
            <button
   className="btn-admin-connect"
   type="button"
-  onClick={onLoginClick}
+  onClick={onAdminLogin}
 >
   Connexion Admin &nbsp;›
 </button>
@@ -277,14 +277,14 @@ export default function Home({ onLoginClick, onRegisterClick }) {
              <button
   className="btn-outline"
   type="button"
-  onClick={onLoginClick}
+  onClick={onEmployeeLogin}
 >
   Connexion
 </button>
             <button
   className="btn-dark"
   type="button"
-  onClick={onRegisterClick}
+  onClick={onEmployeeRegister}
 >
   S'inscrire
 </button>
@@ -304,14 +304,14 @@ export default function Home({ onLoginClick, onRegisterClick }) {
        <button
   className="btn-primary"
   type="button"
-  onClick={onLoginClick}
+  onClick={onEmployeeLogin}
 >
   Accéder à l'application &nbsp;›
 </button>
         <button
   className="btn-ghost"
   type="button"
-  onClick={onRegisterClick}
+  onClick={onEmployeeRegister}
 >
   <span>👤</span> Créer un compte
 </button>

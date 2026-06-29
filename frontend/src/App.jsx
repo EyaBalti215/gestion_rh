@@ -1,65 +1,57 @@
 import React, { useState } from 'react';
-import Home                 from './components/Home';
-import Login                from './components/Login';
-import AdminDashboard       from './components/AdminDashboard';
-import EmployeeRegistration from './components/EmployeeRegistration';
-import ForgotPassword       from './components/ForgotPassword';
-import OtpVerification      from './components/OtpVerification';
-
-/*
-  VUES POSSIBLES :
-  'home'           → Page d'accueil
-  'login'          → Page de connexion
-  'forgot'         → Formulaire "Mot de passe oublié"
-  'otp'            → Saisie du code OTP
-  'adminDashboard' → Tableau de bord admin
-  'register'       → Inscription employé
-*/
+import Home                   from './components/Home';
+import Login                  from './components/Login';
+import EmployeeRegistration   from './components/EmployeeRegistration';
+import AdminDashboard         from './components/AdminDashboard';
+import EmployeeDashboard      from './components/Employeedashboard';
+import OtpVerification        from './components/OtpVerification';
+import NewPassword            from './components/NewPassword';
+import ForgotPassword           from './components/ForgotPassword';
+import Inscriptions            from './components/Inscriptions';
+// ─────────────────────────────────────────────────────────────
+// Vues possibles :
+//   'home'         → page d'accueil publique
+//   'login'        → connexion (admin + employé)
+//   'register'     → formulaire inscription employé
+//   'admin'        → tableau de bord administrateur
+//   'employee'     → tableau de bord employé
+// ─────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [view, setView]       = useState('home');
-  const [user, setUser]       = useState(null);
-  const [otpEmail, setOtpEmail] = useState('');
+  const [view, setView]   = useState('home');
+  const [user, setUser]   = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
 
-  // ── Handlers ────────────────────────────────────────────────
+  
 
+  // ── Connexion réussie → dispatch selon le rôle ───────────────────────────
   const handleLogin = (userData) => {
     setUser(userData);
-    setView(userData.role === 'admin' ? 'adminDashboard' : 'home');
+    if (userData.role === 'ADMIN') {
+      setView('admin');
+    } else {
+      setView('employee');
+    }
   };
 
+  // ── Déconnexion ──────────────────────────────────────────────────────────
   const handleLogout = () => {
     setUser(null);
     setView('home');
+    setSelectedRole(null);
   };
 
-  // Depuis Login : clic sur "Mot de passe oublié ?"
-  const handleForgotPassword = (prefillEmail = '') => {
-    setOtpEmail(prefillEmail);
-    setView('forgot');
+  const handleChangePassword = () => {
+    setView(user.role === 'ADMIN' ? 'admin' : 'employee');
   };
 
-  // Depuis ForgotPassword : OTP envoyé avec succès
-  const handleOtpSent = (email) => {
-    setOtpEmail(email);
-    setView('otp');
-  };
-
-  // Depuis OtpVerification : code validé
-  const handleOtpVerified = (email) => {
-    // Dans une vraie app : rediriger vers un formulaire "nouveau mot de passe"
-    // Pour la démo : on revient à login avec un message de succès
-    alert(`✅ Identité vérifiée pour ${email}.\nVous pouvez maintenant vous reconnecter.`);
-    setView('login');
-  };
-
-  // ── Rendu ────────────────────────────────────────────────────
-
+  // ── Routing ──────────────────────────────────────────────────────────────
   if (view === 'home') {
     return (
       <Home
-        onLoginClick={() => setView('login')}
-        onRegisterClick={() => setView('register')}
+        onAdminLogin={() => { setSelectedRole('admin'); setView('login'); }}
+        onEmployeeLogin={() => { setSelectedRole('employee'); setView('login'); }}
+        onEmployeeRegister={() => { setSelectedRole('employee'); setView('register'); }}
       />
     );
   }
@@ -67,34 +59,27 @@ export default function App() {
   if (view === 'login') {
     return (
       <Login
+        role={selectedRole}
         onLogin={handleLogin}
+        onCancel={() => {
+          setView('home');
+          setSelectedRole(null);
+        }}
+        onRegisterClick={() => { setSelectedRole('employee'); setView('register'); }}
+      />
+    );
+  }
+
+  if (view === 'register') {
+    return (
+      <EmployeeRegistration
         onCancel={() => setView('home')}
-        onRegisterClick={() => setView('register')}
-        onForgotPassword={handleForgotPassword}   /* ← nouveau prop */
+        onSuccess={() => setView('home')}
       />
     );
   }
 
-  if (view === 'forgot') {
-    return (
-      <ForgotPassword
-        onBack={() => setView('login')}
-        onOtpSent={handleOtpSent}
-      />
-    );
-  }
-
-  if (view === 'otp') {
-    return (
-      <OtpVerification
-        email={otpEmail}
-        onBack={() => setView('forgot')}
-        onVerified={handleOtpVerified}
-      />
-    );
-  }
-
-  if (view === 'adminDashboard') {
+  if (view === 'admin') {
     return (
       <AdminDashboard
         user={user}
@@ -103,11 +88,11 @@ export default function App() {
     );
   }
 
-  if (view === 'register') {
+  if (view === 'employee') {
     return (
-      <EmployeeRegistration
-        onBack={() => setView('home')}
-        onSuccess={() => setView('login')}
+      <EmployeeDashboard
+        user={user}
+        onLogout={handleLogout}
       />
     );
   }

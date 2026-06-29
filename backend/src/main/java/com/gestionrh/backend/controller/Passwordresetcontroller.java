@@ -1,6 +1,7 @@
 package com.gestionrh.backend.controller;
 
 import com.gestionrh.backend.service.Emailservice;
+import com.gestionrh.backend.service.EmployeeService;
 import com.gestionrh.backend.service.Otpservice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,9 @@ public class Passwordresetcontroller {
     @Autowired
     private Emailservice emailService;
 
+    @Autowired
+    private EmployeeService employeeService;
+
     // ── Preflight CORS OPTIONS ────────────────────────────────────
     @RequestMapping(value = "/send-otp", method = RequestMethod.OPTIONS)
     public ResponseEntity<Void> handleOptionsSendOtp() {
@@ -31,6 +35,11 @@ public class Passwordresetcontroller {
 
     @RequestMapping(value = "/verify-otp", method = RequestMethod.OPTIONS)
     public ResponseEntity<Void> handleOptionsVerifyOtp() {
+        return ResponseEntity.ok().build();
+    }
+
+    @RequestMapping(value = "/reset-password", method = RequestMethod.OPTIONS)
+    public ResponseEntity<Void> handleOptionsResetPassword() {
         return ResponseEntity.ok().build();
     }
 
@@ -77,6 +86,36 @@ public class Passwordresetcontroller {
             return ResponseEntity.ok(Map.of("success", true, "message", "Code valide."));
         } else {
             return ResponseEntity.ok(Map.of("success", false, "message", "Code invalide ou expiré."));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String nouveauMotDePasse = body.get("nouveauMotDePasse");
+
+        if (email == null || email.isBlank() || nouveauMotDePasse == null || nouveauMotDePasse.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "E-mail et nouveau mot de passe requis."));
+        }
+
+        if (!otpService.isEmailOtpVerified(email)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", "Code OTP non vérifié ou expiré."));
+        }
+
+        try {
+            employeeService.resetPasswordByEmail(email, nouveauMotDePasse);
+            otpService.consumeVerifiedEmail(email);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Mot de passe réinitialisé avec succès."));
+        } catch (RuntimeException e) {
+            log.error("❌ Erreur reset mot de passe : {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("❌ Erreur reset mot de passe : {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("success", false, "message", "Erreur lors de la réinitialisation du mot de passe."));
         }
     }
 }

@@ -1,0 +1,143 @@
+.role-selection-root {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.role-selection-container {
+  max-width: 1000px;
+  width: 90%;
+}
+
+.role-selection-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 60px;
+}
+
+.role-selection-header h1 {
+  font-size: 2.5rem;
+  margin: 0 0 10px 0;
+  font-weight: 700;
+}
+
+.role-selection-header p {
+  font-size: 1.1rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.role-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.role-card {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.role-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.role-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.role-card h2 {
+  font-size: 1.8rem;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.role-card > p {
+  color: #666;
+  margin: 0 0 30px 0;
+  font-size: 0.95rem;
+}
+
+.role-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 30px 0;
+  text-align: left;
+}
+
+.role-features li {
+  color: #555;
+  padding: 8px 0;
+  font-size: 0.95rem;
+}
+
+.role-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.role-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.role-cancel {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.role-cancel:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+  .role-cards {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .role-selection-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .role-card {
+    padding: 30px;
+  }
+
+  .role-icon {
+    font-size: 2rem;
+  }
+
+  .role-card h2 {
+    font-size: 1.4rem;
+  }
+}

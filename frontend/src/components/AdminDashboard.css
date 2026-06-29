@@ -9,7 +9,7 @@
   color: #fff;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 28px 20px;
 }
 
@@ -45,15 +45,16 @@
 .sidebar-nav {
   display: grid;
   gap: 10px;
+  margin-top: 18px;
 }
 
 .sidebar-link {
+  display: flex;
   width: 100%;
-  
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
-  padding: 6px 1px;
+  padding: 10px 14px;
   border-radius: 18px;
   border: none;
   background: transparent;
@@ -61,6 +62,7 @@
   font-size: 0.92rem;
   cursor: pointer;
   text-align: left;
+  transition: background 0.2s, color 0.2s;
 }
 
 .sidebar-link.active {
@@ -92,6 +94,7 @@
   height: 24px;
   display: inline-grid;
   place-items: center;
+  margin-left: auto;
   border-radius: 999px;
   background: #fee2e2;
   color: #b91c1c;
@@ -104,6 +107,7 @@
   padding-top: 24px;
   display: grid;
   gap: 16px;
+  margin-top: auto;
 }
 
 .sidebar-user-row {
@@ -130,6 +134,25 @@
 .sidebar-user-role {
   color: #94a3b8;
   font-size: 0.82rem;
+}
+
+.password-button {
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 10px 12px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.password-button:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .logout-small {
@@ -175,6 +198,11 @@
   font-size: 0.95rem;
   color: #324152;
   background: transparent;
+}
+
+.search-icon {
+  font-size: 1rem;
+  color: #9ca3af;
 }
 
 .topbar-actions {
@@ -377,9 +405,15 @@
 .legend-dot.yellow { background: #f59e0b; }
 .legend-dot.green { background: #10b981; }
 
-@media (max-width: 1180px) {
+@media (max-width: 900px) {
   .dashboard-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr;
   }
 
   .admin-app {
@@ -388,10 +422,6 @@
 }
 
 @media (max-width: 820px) {
-  .dashboard-cards {
-    grid-template-columns: 1fr;
-  }
-
   .dashboard-panels {
     grid-template-columns: 1fr;
   }
