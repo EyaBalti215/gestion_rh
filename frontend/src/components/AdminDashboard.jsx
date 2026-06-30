@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './AdminDashboard.css';
 import Inscriptions from './Inscriptions';
+import AdminConges from './AdminConges';
 
 const sidebarItems = [
   { key: 'dashboard',   label: 'Tableau de bord',    icon: '📊' },
@@ -86,63 +87,70 @@ export default function AdminDashboard({ user, onLogout }) {
         </section>
 
         {/* ── Pages ── */}
-        {activePage === 'dashboard' && (
-          <>
-            <section className="dashboard-cards">
-              {cards.map((card) => (
-                <article key={card.label} className="metric-card">
-                  <div className={`metric-icon ${card.color}`}>{card.icon}</div>
-                  <div className="metric-content">
-                    <div className="metric-top">
-                      <p>{card.label}</p>
-                      <span className="metric-trend">{card.trend}</span>
+        {(() => {
+          switch (activePage) {
+            case 'dashboard':
+              return (
+                <>
+                  <section className="dashboard-cards">
+                    {cards.map((card) => (
+                      <article key={card.label} className="metric-card">
+                        <div className={`metric-icon ${card.color}`}>{card.icon}</div>
+                        <div className="metric-content">
+                          <div className="metric-top">
+                            <p>{card.label}</p>
+                            <span className="metric-trend">{card.trend}</span>
+                          </div>
+                          <strong>{card.value}</strong>
+                          <span className="metric-detail">{card.detail}</span>
+                        </div>
+                      </article>
+                    ))}
+                  </section>
+
+                  <section className="dashboard-panels">
+                    <div className="panel chart-panel">
+                      <div className="panel-header">
+                        <h2>Évolution financière — 6 mois</h2>
+                        <span>Juin</span>
+                      </div>
+                      <div className="chart-placeholder">Graphique ligne ici</div>
                     </div>
-                    <strong>{card.value}</strong>
-                    <span className="metric-detail">{card.detail}</span>
-                  </div>
-                </article>
-              ))}
-            </section>
 
-            <section className="dashboard-panels">
-              <div className="panel chart-panel">
-                <div className="panel-header">
-                  <h2>Évolution financière — 6 mois</h2>
-                  <span>Juin</span>
+                    <div className="panel donut-panel">
+                      <div className="panel-header">
+                        <h2>Répartition Juin</h2>
+                      </div>
+                      <div className="donut-grid">
+                        <div className="donut-circle" />
+                        <div className="donut-legend">
+                          <div><span className="legend-dot purple" /> Masse salariale <strong>25 290 DA</strong></div>
+                          <div><span className="legend-dot blue" />   Services & IT <strong>974 DA</strong></div>
+                          <div><span className="legend-dot yellow" /> Charges courantes <strong>3 106 DA</strong></div>
+                          <div><span className="legend-dot green" />  Résultat net <strong>34 130 DA</strong></div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              );
+            case 'employes':
+              return <Inscriptions mode="employes" />;
+            case 'inscriptions':
+              return <Inscriptions mode="inscriptions" />;
+            case 'conges':
+              return <AdminConges />;
+            default:
+              return (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  height: '60vh', color: '#9ca3af', fontSize: '1rem'
+                }}>
+                  Section « {pageTitle} » — en cours de développement
                 </div>
-                <div className="chart-placeholder">Graphique ligne ici</div>
-              </div>
-
-              <div className="panel donut-panel">
-                <div className="panel-header">
-                  <h2>Répartition Juin</h2>
-                </div>
-                <div className="donut-grid">
-                  <div className="donut-circle" />
-                  <div className="donut-legend">
-                    <div><span className="legend-dot purple" /> Masse salariale <strong>25 290 DA</strong></div>
-                    <div><span className="legend-dot blue" />   Services & IT <strong>974 DA</strong></div>
-                    <div><span className="legend-dot yellow" /> Charges courantes <strong>3 106 DA</strong></div>
-                    <div><span className="legend-dot green" />  Résultat net <strong>34 130 DA</strong></div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </>
-        )}
-
-        {(activePage === 'employes' || activePage === 'inscriptions') && (
-          <Inscriptions mode={activePage} />
-        )}
-
-        {activePage !== 'dashboard' && activePage !== 'inscriptions' && activePage !== 'employes' && (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            height: '60vh', color: '#9ca3af', fontSize: '1rem'
-          }}>
-            Section « {pageTitle} » — en cours de développement
-          </div>
-        )}
+              );
+          }
+        })()}
       </main>
     </div>
   );

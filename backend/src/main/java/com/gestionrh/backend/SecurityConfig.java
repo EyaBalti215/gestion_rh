@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -27,19 +28,9 @@ public class SecurityConfig {
             // ✅ activer CORS
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-            // 🔐 règles d’accès (mode local simple pour l’application RH)
+            // 🔐 en développement, autoriser toutes les requêtes API
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers(
-                    "/api/employees/register",
-                    "/api/employees/login",
-                    "/api/employees/change-password",
-                    "/api/employees/**",
-                    "/api/home/**",
-                    "/api/password-reset/**",
-                    "/api/password/**"
-                ).permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()
             )
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable);

@@ -60,7 +60,7 @@ function ViewLogin({ role, onCancel, onRegisterClick, onForgotPassword, onLoginS
           }
         : {
             role: 'EMPLOYE',
-            id: data.id,
+            id: data.employeeId || data.id,
             prenom: data.prenom,
             nom: data.nom,
             email: data.email,
