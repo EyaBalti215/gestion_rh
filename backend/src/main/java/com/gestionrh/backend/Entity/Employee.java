@@ -1,6 +1,5 @@
 package com.gestionrh.backend.Entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -25,32 +24,27 @@ public class Employee {
     private String modeReglement;
     private String rib;
 
-    @JsonIgnore                      // ← ne jamais renvoyer le hash au frontend
+    @Column(unique = true)
+    private String login;
+
     @Column(name = "mot_de_passe")
-    private String motDePasse;
+    private String password;
 
-    @Enumerated(EnumType.STRING)
-    private StatutCompte statut = StatutCompte.EN_ATTENTE;
+    private String statut = "EN_ATTENTE";
 
-    @Enumerated(EnumType.STRING)
-    private Role role = Role.EMPLOYE;
+    private Double salaire;
 
-    @Column(updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    private LocalDateTime validatedAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
-    public enum StatutCompte { EN_ATTENTE, VALIDE, REJETE }
-    public enum Role { ADMIN, EMPLOYE }
-
-    // ── Getters & Setters ────────────────────────────────────────────────────
-
+    // Getters & Setters
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public String getPrenom() { return prenom; }
     public void setPrenom(String prenom) { this.prenom = prenom; }
@@ -79,17 +73,18 @@ public class Employee {
     public String getRib() { return rib; }
     public void setRib(String rib) { this.rib = rib; }
 
-    public String getMotDePasse() { return motDePasse; }
-    public void setMotDePasse(String motDePasse) { this.motDePasse = motDePasse; }
+    public String getLogin() { return login; }
+    public void setLogin(String login) { this.login = login; }
 
-    public StatutCompte getStatut() { return statut; }
-    public void setStatut(StatutCompte statut) { this.statut = statut; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public String getStatut() { return statut; }
+    public void setStatut(String statut) { this.statut = statut; }
+
+    public Double getSalaire() { return salaire; }
+    public void setSalaire(Double salaire) { this.salaire = salaire; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
-
-    public LocalDateTime getValidatedAt() { return validatedAt; }
-    public void setValidatedAt(LocalDateTime validatedAt) { this.validatedAt = validatedAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

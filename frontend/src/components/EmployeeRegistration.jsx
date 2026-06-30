@@ -7,6 +7,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
     prenom: '',
     nom: '',
     email: '',
+    login: '',
     telephone: '',
     adresse: '',
     poste: '',
@@ -34,6 +35,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
     if (step === 1) {
       if (!formData.prenom.trim())    newErrors.prenom    = 'Le prénom est requis';
       if (!formData.nom.trim())       newErrors.nom       = 'Le nom est requis';
+      if (!formData.login.trim())     newErrors.login     = 'Le login est requis';
       if (!formData.email.trim()) {
         newErrors.email = "L'e-mail est requis";
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -79,6 +81,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
         prenom:        formData.prenom,
         nom:           formData.nom,
         email:         formData.email,
+        login:         formData.login,
         telephone:     formData.telephone,
         adresse:       formData.adresse,
         poste:         formData.poste,
@@ -128,7 +131,7 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
               <div className="step-icon">🎉</div>
               <h2>Demande soumise avec succès !</h2>
               <p className="step-subtitle">
-                Bienvenue, <strong>{successData.prenom} {successData.nom}</strong>
+                Bienvenue, <strong>{successData.employee?.prenom} {successData.employee?.nom}</strong>
               </p>
 
               <div className="security-info" style={{ marginTop: '16px', background: '#f0fdf4', borderColor: '#86efac' }}>
@@ -143,7 +146,9 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
               <div className="security-info" style={{ marginTop: '12px' }}>
                 <span className="info-icon">ℹ</span>
                 <span className="info-text">
-                  <strong>E-mail enregistré :</strong> {successData.email}
+                  <strong>E-mail enregistré :</strong> {successData.employee?.email}
+                  <br />
+                  <strong>Login :</strong> {successData.employee?.login || '—'}
                   <br />
                   <strong>Statut :</strong> En attente de validation
                 </span>
@@ -273,6 +278,22 @@ export default function EmployeeRegistration({ onCancel, onSuccess }) {
                   />
                 </div>
                 {errors.email && <span className="error-message">{errors.email}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="login">Login <span className="required-star">*</span></label>
+                <div className="input-wrapper">
+                  <span className="input-icon">👤</span>
+                  <input
+                    id="login"
+                    type="text"
+                    placeholder="ex: j.dupont"
+                    value={formData.login}
+                    onChange={(e) => handleInputChange('login', e.target.value)}
+                    className={errors.login ? 'form-input error' : 'form-input'}
+                  />
+                </div>
+                {errors.login && <span className="error-message">{errors.login}</span>}
               </div>
 
               <div className="form-group">

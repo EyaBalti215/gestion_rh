@@ -1,418 +1,259 @@
 package com.gestionrh.backend.service;
 
 import com.gestionrh.backend.Entity.Employee;
-import com.gestionrh.backend.dto.EmployeeRequestDto;
-import com.gestionrh.backend.dto.EmployeeResponseDto;
-import com.gestionrh.backend.dto.Loginrequestdto;
-import com.gestionrh.backend.dto.LoginResponseDto;
 import com.gestionrh.backend.Repository.EmployeeRepository;
+import com.gestionrh.backend.dto.ChangePasswordDto;
+import com.gestionrh.backend.dto.EmployeeRequestDto;
+import com.gestionrh.backend.dto.LoginResponseDto;
+import com.gestionrh.backend.dto.Loginrequestdto;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmployeeService {
 
-    private final EmployeeRepository repo;
-    private final BCryptPasswordEncoder encoder;
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
-    // ── IDENTIFIANTS ADMIN (stockés en dur) ──────────────────────────────────
-    private static final String ADMIN_EMAIL = "admin@hrflow.local";
-    private static final String ADMIN_PASSWORD = "admin123";
+    @Autowired
+    private JavaMailSender mailSender;
 
-    public EmployeeService(EmployeeRepository repo) {
-        this.repo = repo;
-        this.encoder = new BCryptPasswordEncoder();
-    }
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // ════════════════════════════════════════════════════════════════════════════
-    // 🔐 1. INSCRIPTION EMPLOYÉ (CREATE ACCOUNT - PUBLIC)
-    // ════════════════════════════════════════════════════════════════════════════
+    // ── CRUD ──────────────────────────────────────────────────────
 
-    public EmployeeResponseDto register(EmployeeRequestDto dto) {
-        // Vérifier si l'email existe déjà
-        String email = dto.getEmail().trim().toLowerCase();
-        if (repo.existsByEmail(email)) {
-            throw new RuntimeException("❌ Un compte avec cet e-mail existe déjà.");
-        }
-
-        // Créer un nouvel employé
-        Employee emp = new Employee();
-        emp.setPrenom(dto.getPrenom().trim());
-        emp.setNom(dto.getNom().trim());
-        emp.setEmail(email);
-        emp.setTelephone(dto.getTelephone().trim());
-        emp.setAdresse(dto.getAdresse().trim());
-        emp.setPoste(dto.getPoste().trim());
-        emp.setTypeContrat(dto.getTypeContrat() != null ? dto.getTypeContrat() : "CDI");
-        emp.setModeReglement(dto.getModeReglement() != null ? dto.getModeReglement() : "Virement bancaire");
-        emp.setRib(dto.getRib().trim());
-        emp.setMotDePasse(encoder.encode(dto.getMotDePasse())); // 🔐 Hash BCrypt
-        emp.setRole(Employee.Role.EMPLOYE);
-        emp.setStatut(Employee.StatutCompte.EN_ATTENTE);
-
-        Employee saved = repo.save(emp);
-
-        return new EmployeeResponseDto(
-            saved.getId(),
-            saved.getPrenom(),
-            saved.getNom(),
-            saved.getEmail(),
-            saved.getStatut().name(),
-            "✅ Bienvenue " + saved.getPrenom() + " " + saved.getNom() +
-            " ! Votre inscription a été reçue. " +
-            "Un administrateur validera votre profil avant d'accéder à la plateforme."
-        );
-    }
-
-    public EmployeeResponseDto createEmployee(EmployeeRequestDto dto) {
-        String email = dto.getEmail().trim().toLowerCase();
-        if (repo.existsByEmail(email)) {
-            throw new RuntimeException("❌ Un compte avec cet e-mail existe déjà.");
-        }
-
-        Employee emp = new Employee();
-        emp.setPrenom(dto.getPrenom().trim());
-        emp.setNom(dto.getNom().trim());
-        emp.setEmail(email);
-        emp.setTelephone(dto.getTelephone() != null ? dto.getTelephone().trim() : "");
-        emp.setAdresse(dto.getAdresse() != null ? dto.getAdresse().trim() : "");
-        emp.setPoste(dto.getPoste() != null ? dto.getPoste().trim() : "");
-        emp.setTypeContrat(dto.getTypeContrat() != null ? dto.getTypeContrat() : "CDI");
-        emp.setModeReglement(dto.getModeReglement() != null ? dto.getModeReglement() : "Virement bancaire");
-        emp.setRib(dto.getRib() != null ? dto.getRib().trim() : "");
-        emp.setMotDePasse(encoder.encode(
-            dto.getMotDePasse() != null && !dto.getMotDePasse().isBlank()
-                ? dto.getMotDePasse().trim()
-                : generateTempPassword()
-        ));
-        emp.setRole(Employee.Role.EMPLOYE);
-        emp.setStatut(Employee.StatutCompte.VALIDE);
-        emp.setValidatedAt(LocalDateTime.now());
-
-        Employee saved = repo.save(emp);
-
-        return new EmployeeResponseDto(
-            saved.getId(),
-            saved.getPrenom(),
-            saved.getNom(),
-            saved.getEmail(),
-            saved.getStatut().name(),
-            "✅ Nouvel employé créé avec succès."
-        );
-    }
-
-    public EmployeeResponseDto updateEmployee(Long id, EmployeeRequestDto dto) {
-        Employee emp = repo.findById(id)
-            .orElseThrow(() -> new RuntimeException("❌ Employé non trouvé."));
-
-        String email = dto.getEmail().trim().toLowerCase();
-        if (!email.equals(emp.getEmail()) && repo.existsByEmail(email)) {
-            throw new RuntimeException("❌ Un autre compte utilise déjà cet e-mail.");
-        }
-
-        emp.setPrenom(dto.getPrenom().trim());
-        emp.setNom(dto.getNom().trim());
-        emp.setEmail(email);
-        emp.setTelephone(dto.getTelephone() != null ? dto.getTelephone().trim() : "");
-        emp.setAdresse(dto.getAdresse() != null ? dto.getAdresse().trim() : "");
-        emp.setPoste(dto.getPoste() != null ? dto.getPoste().trim() : "");
-        emp.setTypeContrat(dto.getTypeContrat() != null ? dto.getTypeContrat() : emp.getTypeContrat());
-        emp.setModeReglement(dto.getModeReglement() != null ? dto.getModeReglement() : emp.getModeReglement());
-        emp.setRib(dto.getRib() != null ? dto.getRib().trim() : emp.getRib());
-
-        Employee saved = repo.save(emp);
-
-        return new EmployeeResponseDto(
-            saved.getId(),
-            saved.getPrenom(),
-            saved.getNom(),
-            saved.getEmail(),
-            saved.getStatut().name(),
-            "✅ Les informations de l'employé ont été mises à jour avec succès."
-        );
-    }
-
-    private String generateTempPassword() {
-        return "Temp" + System.currentTimeMillis() % 100000 + "!";
-    }
-
-    // ════════════════════════════════════════════════════════════════════════════
-    // 🔑 2. CONNEXION UNIFIÉE (LOGIN - ADMIN + EMPLOYÉ)
-    // ════════════════════════════════════════════════════════════════════════════
-
-    public LoginResponseDto login(Loginrequestdto dto) {
-        String email = dto.getEmail() != null ? dto.getEmail().trim().toLowerCase() : "";
-        String motDePasse = dto.getMotDePasse();
-
-        boolean isDefaultAdminLogin = ADMIN_EMAIL.equals(email) && ADMIN_PASSWORD.equals(motDePasse);
-
-        // Fallback local sûr : si l'admin par défaut tente de se connecter et que la ligne n'existe pas encore,
-        // on la crée automatiquement avec le bon rôle/statut.
-        if (isDefaultAdminLogin) {
-            Employee existingAdmin = repo.findByEmail(email).orElse(null);
-            if (existingAdmin == null) {
-                Employee createdAdmin = new Employee();
-                createdAdmin.setPrenom("Admin");
-                createdAdmin.setNom("System");
-                createdAdmin.setEmail(email);
-                createdAdmin.setTelephone("+213500000000");
-                createdAdmin.setAdresse("Siège administratif");
-                createdAdmin.setPoste("Administrateur");
-                createdAdmin.setTypeContrat("CDI");
-                createdAdmin.setModeReglement("Virement bancaire");
-                createdAdmin.setRib("XXXXXXXXXXXXXX");
-                createdAdmin.setMotDePasse(encoder.encode(ADMIN_PASSWORD));
-                createdAdmin.setRole(Employee.Role.ADMIN);
-                createdAdmin.setStatut(Employee.StatutCompte.VALIDE);
-                createdAdmin.setValidatedAt(LocalDateTime.now());
-                existingAdmin = repo.save(createdAdmin);
-            } else if (existingAdmin.getRole() != Employee.Role.ADMIN || existingAdmin.getStatut() != Employee.StatutCompte.VALIDE) {
-                existingAdmin.setRole(Employee.Role.ADMIN);
-                existingAdmin.setStatut(Employee.StatutCompte.VALIDE);
-                existingAdmin.setValidatedAt(LocalDateTime.now());
-                existingAdmin.setMotDePasse(encoder.encode(ADMIN_PASSWORD));
-                existingAdmin = repo.save(existingAdmin);
-            }
-
-            return new LoginResponseDto(
-                true,
-                "ADMIN",
-                existingAdmin.getPrenom(),
-                existingAdmin.getNom(),
-                existingAdmin.getEmail(),
-                existingAdmin.getStatut().name(),
-                "✅ Bienvenue administrateur !",
-                existingAdmin.getId()
-            );
-        }
-
-        // Chercher l'utilisateur en BD (admin OU employé)
-        Employee emp = repo.findByEmail(email).orElse(null);
-
-        if (emp == null) {
-            return new LoginResponseDto(
-                false,
-                null,
-                null, null, null, null,
-                "❌ Aucun compte trouvé avec cet e-mail.",
-                null
-            );
-        }
-
-        // Vérifier le mot de passe (BCrypt)
-        if (!encoder.matches(motDePasse, emp.getMotDePasse())) {
-            return new LoginResponseDto(
-                false,
-                null,
-                null, null, null, null,
-                "❌ Mot de passe incorrect.",
-                null
-            );
-        }
-
-        // ── CAS 1 : CONNEXION ADMINISTRATEUR ─────────────────────────────────
-        if (emp.getRole() == Employee.Role.ADMIN) {
-            // Admin doit être VALIDE
-            if (emp.getStatut() != Employee.StatutCompte.VALIDE) {
-                return new LoginResponseDto(
-                    false,
-                    null,
-                    null, null, null, null,
-                    "❌ Compte administrateur inactif.",
-                    null
-                );
-            }
-            return new LoginResponseDto(
-                true,
-                "ADMIN",
-                emp.getPrenom(),
-                emp.getNom(),
-                emp.getEmail(),
-                emp.getStatut().name(),
-                "✅ Bienvenue administrateur !",
-                emp.getId()
-            );
-        }
-
-        // ── CAS 2 : CONNEXION EMPLOYÉ ──────────────────────────────────────
-        if (emp.getStatut() == Employee.StatutCompte.EN_ATTENTE) {
-            return new LoginResponseDto(
-                false,
-                null,
-                emp.getPrenom(), emp.getNom(), emp.getEmail(),
-                emp.getStatut().name(),
-                "⏳ Votre compte est en attente de validation par un administrateur.",
-                emp.getId()
-            );
-        }
-
-        if (emp.getStatut() == Employee.StatutCompte.REJETE) {
-            return new LoginResponseDto(
-                false,
-                null,
-                emp.getPrenom(), emp.getNom(), emp.getEmail(),
-                emp.getStatut().name(),
-                "❌ Votre demande d'inscription a été refusée. Contactez l'administrateur.",
-                emp.getId()
-            );
-        }
-
-        // ✅ EMPLOYÉ VALIDÉ → Accès autorisé
-        return new LoginResponseDto(
-            true,
-            "EMPLOYE",
-            emp.getPrenom(),
-            emp.getNom(),
-            emp.getEmail(),
-            emp.getStatut().name(),
-            "✅ Bienvenue " + emp.getPrenom() + " " + emp.getNom() + " !",
-            emp.getId()
-        );
-    }
-
-    // ════════════════════════════════════════════════════════════════════════════
-    // 👨‍💼 3. GESTION ADMINISTRATEUR (VOIR & VALIDER/REFUSER)
-    // ════════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Lister tous les employés
-     */
     public List<Employee> getAllEmployees() {
-        return repo.findAll();
+        return employeeRepository.findAll();
     }
+
+    public Optional<Employee> getById(Long id) {
+        return employeeRepository.findById(id);
+    }
+
+    public Employee createEmployee(EmployeeRequestDto dto) {
+        if (dto.getLogin() == null || dto.getLogin().isBlank()) {
+            throw new IllegalArgumentException("Le login est obligatoire.");
+        }
+        if (employeeRepository.existsByLogin(dto.getLogin())) {
+            throw new IllegalArgumentException("Ce login est déjà utilisé.");
+        }
+        if (employeeRepository.existsByEmail(dto.getEmail())) {
+            throw new IllegalArgumentException("Cet email est déjà utilisé.");
+        }
+
+        String rawPassword = dto.getMotDePasse();
+        if (rawPassword == null || rawPassword.isBlank()) {
+            rawPassword = generatePassword();
+        }
+
+        Employee emp = new Employee();
+        mapDtoToEmployee(dto, emp);
+        emp.setPassword(passwordEncoder.encode(rawPassword));
+        emp.setStatut("EN_ATTENTE");
+
+        Employee saved = employeeRepository.save(emp);
+        sendCredentialsEmail(saved.getEmail(), saved.getPrenom(), saved.getLogin(), rawPassword);
+
+        return saved;
+    }
+
+    public Employee updateEmployee(Long id, EmployeeRequestDto dto) {
+        Employee emp = employeeRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Employé introuvable."));
+
+        if (dto.getLogin() != null && !dto.getLogin().equals(emp.getLogin())) {
+            if (employeeRepository.existsByLogin(dto.getLogin())) {
+                throw new IllegalArgumentException("Ce login est déjà utilisé.");
+            }
+        }
+
+        mapDtoToEmployee(dto, emp);
+        return employeeRepository.save(emp);
+    }
+
+    public Employee changePassword(ChangePasswordDto dto) {
+        if (dto.getId() == null) {
+            throw new IllegalArgumentException("L'ID de l'employé est requis.");
+        }
+        Employee emp = employeeRepository.findById(dto.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Employé introuvable."));
+
+        if (dto.getAncienMotDePasse() == null || dto.getAncienMotDePasse().isBlank() ||
+            dto.getNouveauMotDePasse() == null || dto.getNouveauMotDePasse().isBlank()) {
+            throw new IllegalArgumentException("Les deux mots de passe sont requis.");
+        }
+
+        if (!passwordEncoder.matches(dto.getAncienMotDePasse(), emp.getPassword())) {
+            throw new IllegalArgumentException("L'ancien mot de passe est incorrect.");
+        }
+
+        if (dto.getAncienMotDePasse().equals(dto.getNouveauMotDePasse())) {
+            throw new IllegalArgumentException("Le nouveau mot de passe doit être différent de l'ancien.");
+        }
+
+        emp.setPassword(passwordEncoder.encode(dto.getNouveauMotDePasse()));
+        return employeeRepository.save(emp);
+    }
+
+    public Employee valider(Long id) {
+        Employee emp = employeeRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Employé introuvable."));
+        emp.setStatut("VALIDE");
+        return employeeRepository.save(emp);
+    }
+
+    public Employee refuser(Long id) {
+        Employee emp = employeeRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Employé introuvable."));
+        emp.setStatut("REJETE");
+        return employeeRepository.save(emp);
+    }
+
+    // ── LOGIN ─────────────────────────────────────────────────────
 
     /**
-     * Lister employés par statut
+     * Connexion par email + mot de passe.
+     * Gère le compte admin hardcodé si aucun admin n'existe en base.
      */
-    public List<Employee> getEmployeesByStatut(Employee.StatutCompte statut) {
-        return repo.findByStatut(statut);
+    public LoginResponseDto login(Loginrequestdto dto) {
+        final String ADMIN_EMAIL = "admin@hrflow.local";
+        final String ADMIN_PASSWORD = "admin123";
+
+        // Cas admin hardcodé
+        if (ADMIN_EMAIL.equals(dto.getEmail())) {
+            Optional<Employee> existing = employeeRepository.findByEmail(ADMIN_EMAIL);
+
+            if (existing.isEmpty()) {
+                // Créer l'admin en base automatiquement
+                Employee admin = new Employee();
+                admin.setPrenom("Admin");
+                admin.setNom("System");
+                admin.setEmail(ADMIN_EMAIL);
+                admin.setLogin("admin");
+                admin.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
+                admin.setStatut("VALIDE");
+                admin.setPoste("Administrateur");
+                admin.setTypeContrat("CDI");
+                employeeRepository.save(admin);
+
+                LoginResponseDto response = new LoginResponseDto();
+                response.setSuccess(true);
+                response.setRole("ADMIN");
+                response.setMessage("✅ Bienvenue administrateur !");
+                return response;
+            }
+
+            Employee admin = existing.get();
+            if (passwordEncoder.matches(dto.getMotDePasse(), admin.getPassword())) {
+                LoginResponseDto response = new LoginResponseDto();
+                response.setSuccess(true);
+                response.setRole("ADMIN");
+                response.setMessage("✅ Bienvenue administrateur !");
+                return response;
+            } else {
+                LoginResponseDto response = new LoginResponseDto();
+                response.setSuccess(false);
+                response.setMessage("Mot de passe incorrect.");
+                return response;
+            }
+        }
+
+        // Connexion employé standard
+        Optional<Employee> empOpt = employeeRepository.findByEmail(dto.getEmail());
+
+        if (empOpt.isEmpty()) {
+            LoginResponseDto response = new LoginResponseDto();
+            response.setSuccess(false);
+            response.setMessage("Aucun compte trouvé pour cet email.");
+            return response;
+        }
+
+        Employee emp = empOpt.get();
+
+        if (!"VALIDE".equals(emp.getStatut())) {
+            LoginResponseDto response = new LoginResponseDto();
+            response.setSuccess(false);
+            response.setMessage("Votre compte est en attente de validation.");
+            return response;
+        }
+
+        if (!passwordEncoder.matches(dto.getMotDePasse(), emp.getPassword())) {
+            LoginResponseDto response = new LoginResponseDto();
+            response.setSuccess(false);
+            response.setMessage("Mot de passe incorrect.");
+            return response;
+        }
+
+        LoginResponseDto response = new LoginResponseDto();
+        response.setSuccess(true);
+        response.setRole("EMPLOYE");
+        response.setMessage("✅ Connexion réussie.");
+        response.setEmployeeId(emp.getId());
+        return response;
     }
+
+    // ── RESET PASSWORD ────────────────────────────────────────────
 
     /**
-     * Voir les employés EN_ATTENTE (validation)
+     * Réinitialise le mot de passe d'un employé identifié par email.
      */
-    public List<Employee> getPendingEmployees() {
-        return repo.findByStatut(Employee.StatutCompte.EN_ATTENTE);
+    public void resetPasswordByEmail(String email, String nouveauMotDePasse) {
+        Employee emp = employeeRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Aucun compte trouvé pour l'email : " + email));
+
+        emp.setPassword(passwordEncoder.encode(nouveauMotDePasse));
+        employeeRepository.save(emp);
     }
 
-    /**
-     * Valider un employé (Admin)
-     */
-    public EmployeeResponseDto validateEmployee(Long id) {
-        Employee emp = repo.findById(id)
-            .orElseThrow(() -> new RuntimeException("❌ Employé non trouvé."));
+    // ── Helpers ───────────────────────────────────────────────────
 
-        if (emp.getStatut() != Employee.StatutCompte.EN_ATTENTE) {
-            throw new RuntimeException("❌ Cet employé a déjà été traité.");
+    private void mapDtoToEmployee(EmployeeRequestDto dto, Employee emp) {
+        emp.setPrenom(dto.getPrenom());
+        emp.setNom(dto.getNom());
+        emp.setEmail(dto.getEmail());
+        emp.setTelephone(dto.getTelephone());
+        emp.setAdresse(dto.getAdresse());
+        emp.setPoste(dto.getPoste());
+        emp.setTypeContrat(dto.getTypeContrat());
+        emp.setModeReglement(dto.getModeReglement());
+        emp.setRib(dto.getRib());
+        if (dto.getLogin() != null && !dto.getLogin().isBlank()) {
+            emp.setLogin(dto.getLogin());
         }
-
-        emp.setStatut(Employee.StatutCompte.VALIDE);
-        emp.setValidatedAt(LocalDateTime.now());
-        Employee saved = repo.save(emp);
-
-        return new EmployeeResponseDto(
-            saved.getId(),
-            saved.getPrenom(),
-            saved.getNom(),
-            saved.getEmail(),
-            saved.getStatut().name(),
-            "✅ " + saved.getPrenom() + " " + saved.getNom() +
-            " a été validé(e) avec succès. Il/elle peut maintenant se connecter."
-        );
     }
 
-    /**
-     * Refuser un employé (Admin)
-     */
-    public EmployeeResponseDto rejectEmployee(Long id) {
-        Employee emp = repo.findById(id)
-            .orElseThrow(() -> new RuntimeException("❌ Employé non trouvé."));
-
-        if (emp.getStatut() != Employee.StatutCompte.EN_ATTENTE) {
-            throw new RuntimeException("❌ Cet employé a déjà été traité.");
+    private String generatePassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$!";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 10; i++) {
+            sb.append(chars.charAt((int) (Math.random() * chars.length())));
         }
-
-        emp.setStatut(Employee.StatutCompte.REJETE);
-        emp.setValidatedAt(LocalDateTime.now());
-        Employee saved = repo.save(emp);
-
-        return new EmployeeResponseDto(
-            saved.getId(),
-            saved.getPrenom(),
-            saved.getNom(),
-            saved.getEmail(),
-            saved.getStatut().name(),
-            "❌ La demande de " + saved.getPrenom() + " " + saved.getNom() +
-            " a été refusée."
-        );
+        return sb.toString();
     }
 
-    /**
-     * Chercher un employé par ID
-     */
-    public Employee getEmployeeById(Long id) {
-        return repo.findById(id)
-            .orElseThrow(() -> new RuntimeException("❌ Employé non trouvé."));
-    }
-    public EmployeeResponseDto resetPasswordByEmail(String email, String nouveauPass) {
-        Employee emp = repo.findByEmail(email.trim().toLowerCase())
-            .orElseThrow(() -> new RuntimeException("❌ Aucun compte trouvé avec cet e-mail."));
-
-        if (nouveauPass == null || nouveauPass.trim().isEmpty()) {
-            throw new RuntimeException("❌ Le nouveau mot de passe ne peut pas être vide.");
+    private void sendCredentialsEmail(String to, String prenom, String login, String password) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject("🔐 Vos accès à la plateforme RH");
+            message.setText(
+                "Bonjour " + prenom + ",\n\n" +
+                "Votre compte a été créé sur la plateforme de gestion RH.\n\n" +
+                "Vos identifiants de connexion :\n" +
+                "  Login        : " + login + "\n" +
+                "  Mot de passe : " + password + "\n\n" +
+                "Veuillez vous connecter et modifier votre mot de passe dès que possible.\n\n" +
+                "Cordialement,\nL'équipe RH"
+            );
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("⚠️ Échec envoi email à " + to + " : " + e.getMessage());
         }
-        if (nouveauPass.length() < 8) {
-            throw new RuntimeException("❌ Le mot de passe doit contenir au moins 8 caractères.");
-        }
-
-        emp.setMotDePasse(encoder.encode(nouveauPass));
-        Employee saved = repo.save(emp);
-
-        return new EmployeeResponseDto(
-            saved.getId(),
-            saved.getPrenom(),
-            saved.getNom(),
-            saved.getEmail(),
-            saved.getStatut().name(),
-            "✅ Mot de passe réinitialisé avec succès."
-        );
-    }
-    // ════════════════════════════════════════════════════════════════════════════════
-    // 🔐 CHANGEMENT DE MOT DE PASSE
-    // ════════════════════════════════════════════════════════════════════════════════
-
-    public EmployeeResponseDto changePassword(Long id, String ancienPass, String nouveauPass) {
-        Employee emp = getEmployeeById(id);
-
-        // Vérifier ancien mot de passe
-        if (!encoder.matches(ancienPass, emp.getMotDePasse())) {
-            throw new RuntimeException("❌ L'ancien mot de passe est incorrect.");
-        }
-
-        // Vérifier que le nouveau n'est pas vide
-        if (nouveauPass == null || nouveauPass.trim().isEmpty()) {
-            throw new RuntimeException("❌ Le nouveau mot de passe ne peut pas être vide.");
-        }
-
-        // Vérifier longueur minimale
-        if (nouveauPass.length() < 8) {
-            throw new RuntimeException("❌ Le mot de passe doit contenir au moins 8 caractères.");
-        }
-
-        // Encoder et sauvegarder
-        emp.setMotDePasse(encoder.encode(nouveauPass));
-        Employee saved = repo.save(emp);
-
-        return new EmployeeResponseDto(
-            saved.getId(),
-            saved.getPrenom(),
-            saved.getNom(),
-            saved.getEmail(),
-            saved.getStatut().name(),
-            "✅ Mot de passe changé avec succès."
-        );
     }
 }

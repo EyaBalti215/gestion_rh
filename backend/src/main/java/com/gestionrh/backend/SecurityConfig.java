@@ -34,10 +34,7 @@ public class SecurityConfig {
                     "/api/employees/register",
                     "/api/employees/login",
                     "/api/employees/change-password",
-                    "/api/employees",
-                    "/api/employees/pending",
-                    "/api/employees/*/valider",
-                    "/api/employees/*/refuser",
+                    "/api/employees/**",
                     "/api/home/**",
                     "/api/password-reset/**",
                     "/api/password/**"

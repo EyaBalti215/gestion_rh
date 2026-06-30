@@ -1,12 +1,15 @@
 package com.gestionrh.backend.Repository;
+
 import com.gestionrh.backend.Entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
+import org.springframework.stereotype.Repository;
+
 import java.util.Optional;
 
-
+@Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
-    Optional<Employee> findByEmail(String email);
+    boolean existsByLogin(String login);
     boolean existsByEmail(String email);
-    List<Employee> findByStatut(Employee.StatutCompte statut); // ← nouveau
+    Optional<Employee> findByEmail(String email);
+    Optional<Employee> findByLogin(String login);
 }

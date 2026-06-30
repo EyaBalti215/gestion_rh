@@ -1,12 +1,11 @@
 package com.gestionrh.backend.controller;
 
 import com.gestionrh.backend.Entity.Employee;
-import com.gestionrh.backend.dto.EmployeeRequestDto;
-import com.gestionrh.backend.dto.EmployeeResponseDto;
-import com.gestionrh.backend.dto.Loginrequestdto;
-import com.gestionrh.backend.dto.LoginResponseDto;
 import com.gestionrh.backend.dto.ChangePasswordDto;
+import com.gestionrh.backend.dto.EmployeeRequestDto;
+import com.gestionrh.backend.dto.Loginrequestdto;
 import com.gestionrh.backend.service.EmployeeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,179 +17,97 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class EmployeeController {
 
-    private final EmployeeService service;
+    @Autowired
+    private EmployeeService employeeService;
 
-    public EmployeeController(EmployeeService service) {
-        this.service = service;
+    @GetMapping
+    public ResponseEntity<List<Employee>> getAll() {
+        return ResponseEntity.ok(employeeService.getAllEmployees());
     }
 
-    // ════════════════════════════════════════════════════════════════════════════
-    // 🆕 PUBLIC : INSCRIPTION EMPLOYÉ
-    // ════════════════════════════════════════════════════════════════════════════
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getOne(@PathVariable Long id) {
+        return employeeService.getById(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
 
-    /**
-     * POST /api/employees/register
-     * ✅ Inscription d'un NOUVEL employé (formulaire public employé)
-     * → Créer un compte → EN_ATTENTE → Attendre validation admin
-     */
+    @PostMapping
+    public ResponseEntity<?> create(@RequestBody EmployeeRequestDto dto) {
+        try {
+            Employee emp = employeeService.createEmployee(dto);
+            return ResponseEntity.ok(Map.of(
+                "message", "Employé créé avec succès. Les identifiants ont été envoyés par email.",
+                "employee", emp
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Erreur serveur inattendue."));
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody EmployeeRequestDto dto) {
-        try {
-            EmployeeResponseDto response = service.register(dto);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(
-                Map.of("success", false, "error", e.getMessage())
-            );
-        }
+        return create(dto);
     }
 
-    // ════════════════════════════════════════════════════════════════════════════
-    // 🔑 PUBLIC : CONNEXION (LOGIN)
-    // ════════════════════════════════════════════════════════════════════════════
-
-    /**
-     * POST /api/employees/login
-     * ✅ Connexion unifiée ADMIN + EMPLOYÉ
-     * Admin → OTP required
-     * Employé → Seulement si VALIDE
-     */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody Loginrequestdto dto) {
-        LoginResponseDto response = service.login(dto);
-        return ResponseEntity.ok(response);
-    }
-
-    // ════════════════════════════════════════════════════════════════════════════
-    // 👨‍💼 ADMIN : GESTION DES EMPLOYÉS
-    // ════════════════════════════════════════════════════════════════════════════
-
-    /**
-     * GET /api/employees
-     * Liste TOUS les employés (pour admin)
-     */
-    @GetMapping
-    public ResponseEntity<List<Employee>> getAllEmployees() {
-        List<Employee> employees = service.getAllEmployees();
-        return ResponseEntity.ok(employees);
-    }
-
-    /**
-     * POST /api/employees
-     * Créer un nouvel employé depuis l'administration
-     */
-    @PostMapping
-    public ResponseEntity<?> createEmployee(@RequestBody EmployeeRequestDto dto) {
+    public ResponseEntity<?> login(@RequestBody Loginrequestdto dto) {
         try {
-            EmployeeResponseDto response = service.createEmployee(dto);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(
-                Map.of("success", false, "error", e.getMessage())
-            );
+            return ResponseEntity.ok(employeeService.login(dto));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Erreur serveur inattendue."));
         }
     }
 
-    /**
-     * PUT /api/employees/{id}
-     * Mettre à jour un employé existant depuis l'administration
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateEmployee(@PathVariable Long id, @RequestBody EmployeeRequestDto dto) {
-        try {
-            EmployeeResponseDto response = service.updateEmployee(id, dto);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(
-                Map.of("success", false, "error", e.getMessage())
-            );
-        }
-    }
-
-    /**
-     * GET /api/employees/pending
-     * Liste employés EN ATTENTE DE VALIDATION (pour admin)
-     */
-    @GetMapping("/pending")
-    public ResponseEntity<List<Employee>> getPendingEmployees() {
-        List<Employee> pending = service.getPendingEmployees();
-        return ResponseEntity.ok(pending);
-    }
-
-    /**
-     * GET /api/employees/{id}
-     * Détails d'un employé
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getEmployeeById(@PathVariable Long id) {
-        try {
-            Employee employee = service.getEmployeeById(id);
-            return ResponseEntity.ok(employee);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    /**
-     * PUT /api/employees/{id}/valider
-     * ✅ ADMIN valide un employé → EN_ATTENTE ➜ VALIDE
-     * → L'employé peut maintenant se connecter
-     */
-    @PutMapping("/{id}/valider")
-    public ResponseEntity<?> validateEmployee(@PathVariable Long id) {
-        try {
-            EmployeeResponseDto response = service.validateEmployee(id);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(
-                Map.of("success", false, "error", e.getMessage())
-            );
-        }
-    }
-
-    /**
-     * PUT /api/employees/{id}/refuser
-     * ❌ ADMIN rejette un employé → EN_ATTENTE ➜ REJETE
-     * → L'employé reçoit un message d'erreur
-     */
-    @PutMapping("/{id}/refuser")
-    public ResponseEntity<?> rejectEmployee(@PathVariable Long id) {
-        try {
-            EmployeeResponseDto response = service.rejectEmployee(id);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(
-                Map.of("success", false, "error", e.getMessage())
-            );
-        }
-    }
-
-    // ════════════════════════════════════════════════════════════════════════════════
-    // 🔐 CHANGEMENT DE MOT DE PASSE
-    // ════════════════════════════════════════════════════════════════════════════════
-
-    /**
-     * PUT /api/employees/change-password
-     * 🔐 Changer le mot de passe (ADMIN + EMPLOYÉ)
-     */
     @PutMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody ChangePasswordDto dto) {
         try {
-            if (dto.getId() == null || dto.getId() <= 0) {
-                return ResponseEntity.badRequest().body(
-                    Map.of("success", false, "error", "ID utilisateur manquant.")
-                );
-            }
-            EmployeeResponseDto response = service.changePassword(
-                dto.getId(),
-                dto.getAncienMotDePasse(),
-                dto.getNouveauMotDePasse()
-            );
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(
-                Map.of("success", false, "error", e.getMessage())
-            );
+            Employee emp = employeeService.changePassword(dto);
+            return ResponseEntity.ok(Map.of(
+                "message", "Mot de passe changé avec succès.",
+                "employee", emp
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Erreur serveur inattendue."));
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody EmployeeRequestDto dto) {
+        try {
+            Employee emp = employeeService.updateEmployee(id, dto);
+            return ResponseEntity.ok(Map.of(
+                "message", "Employé mis à jour avec succès.",
+                "employee", emp
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Erreur serveur inattendue."));
+        }
+    }
+
+    @PutMapping("/{id}/valider")
+    public ResponseEntity<?> valider(@PathVariable Long id) {
+        try {
+            Employee emp = employeeService.valider(id);
+            return ResponseEntity.ok(Map.of("message", "Inscription validée.", "employee", emp));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/refuser")
+    public ResponseEntity<?> refuser(@PathVariable Long id) {
+        try {
+            Employee emp = employeeService.refuser(id);
+            return ResponseEntity.ok(Map.of("message", "Inscription refusée.", "employee", emp));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }
