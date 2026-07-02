@@ -1,0 +1,85 @@
+.admin-pointage-root {
+  padding: 20px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.admin-pointage-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.admin-pointage-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #111827;
+}
+
+.admin-pointage-header p {
+  margin: 8px 0 0;
+  color: #475569;
+}
+
+.admin-pointage-date {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-pointage-date label {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.admin-pointage-date input {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-width: 180px;
+  font-size: 0.95rem;
+}
+
+.admin-pointage-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.admin-pointage-table-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  overflow-x: auto;
+}
+
+.admin-pointage-table-card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-pointage-table-card th,
+.admin-pointage-table-card td {
+  padding: 16px 18px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.admin-pointage-table-card th {
+  color: #6b7280;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-pointage-table-card td {
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.admin-pointage-table-card tbody tr:last-child td {
+  border-bottom: none;
+}

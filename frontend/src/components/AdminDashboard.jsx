@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './AdminDashboard.css';
 import Inscriptions from './Inscriptions';
 import AdminConges from './AdminConges';
+import AdminPointage from './AdminPointage';
 
 const sidebarItems = [
   { key: 'dashboard',   label: 'Tableau de bord',    icon: '📊' },
@@ -138,6 +139,8 @@ export default function AdminDashboard({ user, onLogout }) {
               return <Inscriptions mode="employes" />;
             case 'inscriptions':
               return <Inscriptions mode="inscriptions" />;
+            case 'pointage':
+              return <AdminPointage />;
             case 'conges':
               return <AdminConges />;
             default:

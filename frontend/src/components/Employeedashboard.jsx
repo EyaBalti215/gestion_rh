@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './Employeedashboard.css';
 import MesConges from './MesConges';
+import EmployeePointage from './EmployeePointage';
 
 const sidebarItems = [
   { key: 'dashboard', label: 'Mon tableau de bord', icon: '📊', active: true },
@@ -141,6 +142,8 @@ export default function EmployeeDashboard({ user, onLogout }) {
               );
             case 'conges':
               return <MesConges employeeId={user?.id || user?.employeeId} />;
+            case 'pointage':
+              return <EmployeePointage employeeId={user?.id || user?.employeeId} />;
             default:
               return (
                 <div className="emp-placeholder">

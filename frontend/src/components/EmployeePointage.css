@@ -1,0 +1,129 @@
+.emp-pointage-root {
+  padding: 20px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.emp-pointage-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #111827;
+}
+.emp-pointage-header p {
+  margin: 8px 0 0;
+  color: #4b5563;
+}
+
+.emp-pointage-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 24px;
+  display: grid;
+  gap: 20px;
+}
+
+.emp-pointage-status {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.emp-pointage-status div {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.emp-pointage-status span {
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.emp-pointage-status strong {
+  font-size: 1.2rem;
+  color: #111827;
+}
+
+.emp-pointage-action {
+  width: 100%;
+  padding: 16px;
+  background: #2563eb;
+  border: none;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.emp-pointage-action:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.emp-pointage-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emp-pointage-error {
+  color: #b91c1c;
+  background: #fde8e8;
+  border: 1px solid #fca5a5;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.emp-pointage-history {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.emp-pointage-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.emp-pointage-history-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #111827;
+}
+
+.emp-pointage-history-header span {
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
+.emp-pointage-history table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.emp-pointage-history th,
+.emp-pointage-history td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.emp-pointage-history th {
+  color: #6b7280;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.emp-pointage-history td {
+  color: #111827;
+  font-size: 0.95rem;
+}
