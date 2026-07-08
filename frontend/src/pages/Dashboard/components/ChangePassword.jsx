@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './ChangePassword.css';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 export default function ChangePassword({ user, onCancel, onSuccess }) {
   const [ancienMotDePasse, setAncienMotDePasse] = useState('');
   const [nouveauMotDePasse, setNouveauMotDePasse] = useState('');
@@ -43,7 +45,7 @@ export default function ChangePassword({ user, onCancel, onSuccess }) {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:8080/api/employees/change-password', {
+      const res = await fetch(`${API_BASE}/employees/change-password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

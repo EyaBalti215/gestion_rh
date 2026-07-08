@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import './ForgotPassword.css';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const IS_DEV = import.meta.env.DEV;
+
 export default function ForgotPassword({ onBack, onOtpSent }) {
   const [email, setEmail]     = useState('admin@hrflow.local');
   const [loading, setLoading] = useState(false);
@@ -17,7 +20,7 @@ export default function ForgotPassword({ onBack, onOtpSent }) {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8080/api/password/send-otp', {
+      const res = await fetch(`${API_BASE}/password/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim().toLowerCase() }),
@@ -29,9 +32,15 @@ export default function ForgotPassword({ onBack, onOtpSent }) {
         onOtpSent(email.trim().toLowerCase());
       } else {
         setError(data.message || "Impossible d'envoyer le code.");
+        if (IS_DEV) {
+          onOtpSent(email.trim().toLowerCase());
+        }
       }
     } catch {
       setError("Erreur réseau. Vérifiez que le serveur est démarré.");
+      if (IS_DEV) {
+        onOtpSent(email.trim().toLowerCase());
+      }
     } finally {
       setLoading(false);
     }

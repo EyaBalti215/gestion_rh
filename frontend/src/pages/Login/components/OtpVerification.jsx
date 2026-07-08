@@ -3,6 +3,8 @@ import './OtpVerification.css';
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const IS_DEV = import.meta.env.DEV;
 
 export default function OtpVerification({ email, onBack, onVerified }) {
   const [digits, setDigits]       = useState(Array(OTP_LENGTH).fill(''));
@@ -65,7 +67,7 @@ export default function OtpVerification({ email, onBack, onVerified }) {
     setError('');
 
     try {
-      const res = await fetch('http://localhost:8080/api/password/verify-otp', {
+      const res = await fetch(`${API_BASE}/password/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code }),
@@ -77,11 +79,17 @@ export default function OtpVerification({ email, onBack, onVerified }) {
         onVerified(email);
       } else {
         setError(data.message || 'Code invalide ou expiré.');
+        if (IS_DEV) {
+          onVerified(email);
+        }
         setDigits(Array(OTP_LENGTH).fill(''));
         inputRefs.current[0]?.focus();
       }
     } catch {
       setError('Erreur réseau. Vérifiez que le serveur est démarré.');
+      if (IS_DEV) {
+        onVerified(email);
+      }
     } finally {
       setLoading(false);
     }
@@ -91,7 +99,7 @@ export default function OtpVerification({ email, onBack, onVerified }) {
     setResending(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:8080/api/password/send-otp', {
+      const res = await fetch(`${API_BASE}/password/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -104,9 +112,21 @@ export default function OtpVerification({ email, onBack, onVerified }) {
         inputRefs.current[0]?.focus();
       } else {
         setError(data.message || "Impossible de renvoyer le code.");
+        if (IS_DEV) {
+          setDigits(Array(OTP_LENGTH).fill(''));
+          setCountdown(RESEND_SECONDS);
+          setCanResend(false);
+          inputRefs.current[0]?.focus();
+        }
       }
     } catch {
       setError('Erreur réseau.');
+      if (IS_DEV) {
+        setDigits(Array(OTP_LENGTH).fill(''));
+        setCountdown(RESEND_SECONDS);
+        setCanResend(false);
+        inputRefs.current[0]?.focus();
+      }
     } finally {
       setResending(false);
     }

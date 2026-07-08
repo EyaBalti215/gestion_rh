@@ -45,7 +45,12 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // 🔥 FRONTEND VITE
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "http://0.0.0.0:*",
+            "http://host.docker.internal:*"
+        ));
 
         config.setAllowedMethods(List.of(
                 "GET",

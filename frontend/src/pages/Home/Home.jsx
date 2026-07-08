@@ -1,7 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PATHS } from '../../routes/paths';
 import './Home.css';
 
-export default function Home({ onAdminLogin, onEmployeeLogin, onEmployeeRegister }) {
+export default function Home() {
+  const navigate = useNavigate();
+
   return (
     <div className="home-root">
 
@@ -17,8 +21,8 @@ export default function Home({ onAdminLogin, onEmployeeLogin, onEmployeeRegister
           <li><a href="#metrics">Chiffres clés</a></li>
         </ul>
         <div className="navbar-actions">
-          <button className="link" type="button" onClick={onEmployeeRegister}>Créer un compte</button>
-          <button className="btn-connect" type="button" onClick={onEmployeeLogin}>Se connecter</button>
+          <button className="link" type="button" onClick={() => navigate(PATHS.REGISTER)}>Créer un compte</button>
+          <button className="btn-connect" type="button" onClick={() => navigate(PATHS.LOGIN, { state: { role: 'employee' } })}>Se connecter</button>
         </div>
       </nav>
 
@@ -37,8 +41,8 @@ export default function Home({ onAdminLogin, onEmployeeLogin, onEmployeeRegister
             et professionnelle.
           </p>
           <div className="cta-row">
-            <button className="btn-primary" type="button" onClick={onEmployeeLogin}>Accéder à l'application &nbsp;›</button>
-            <button className="btn-ghost" type="button" onClick={onEmployeeRegister}>
+            <button className="btn-primary" type="button" onClick={() => navigate(PATHS.LOGIN, { state: { role: 'employee' } })}>Accéder à l'application &nbsp;›</button>
+            <button className="btn-ghost" type="button" onClick={() => navigate(PATHS.REGISTER)}>
               <span>👤</span> Créer un compte employé
             </button>
           </div>
@@ -112,7 +116,7 @@ export default function Home({ onAdminLogin, onEmployeeLogin, onEmployeeRegister
               <path d="M0 50 L60 42 L120 35 L180 28 L240 20 L300 14 L360 8 L400 5 L400 60 L0 60 Z" fill="url(#chartGrad)"/>
             </svg>
             <div className="dash-chart-months">
-              {['J','F','M','A','M','J'].map(m => <span key={m}>{m}</span>)}
+              {['J','F','M','A','M','J'].map((m, index) => <span key={`${m}-${index}`}>{m}</span>)}
             </div>
 
             <div className="dash-pending">
@@ -246,7 +250,7 @@ export default function Home({ onAdminLogin, onEmployeeLogin, onEmployeeRegister
            <button
   className="btn-admin-connect"
   type="button"
-  onClick={onAdminLogin}
+  onClick={() => navigate(PATHS.LOGIN, { state: { role: 'admin' } })}
 >
   Connexion Admin &nbsp;›
 </button>
@@ -277,14 +281,14 @@ export default function Home({ onAdminLogin, onEmployeeLogin, onEmployeeRegister
              <button
   className="btn-outline"
   type="button"
-  onClick={onEmployeeLogin}
+  onClick={() => navigate(PATHS.LOGIN, { state: { role: 'employee' } })}
 >
   Connexion
 </button>
             <button
   className="btn-dark"
   type="button"
-  onClick={onEmployeeRegister}
+  onClick={() => navigate(PATHS.REGISTER)}
 >
   S'inscrire
 </button>
@@ -304,14 +308,14 @@ export default function Home({ onAdminLogin, onEmployeeLogin, onEmployeeRegister
        <button
   className="btn-primary"
   type="button"
-  onClick={onEmployeeLogin}
+  onClick={() => navigate(PATHS.LOGIN, { state: { role: 'employee' } })}
 >
   Accéder à l'application &nbsp;›
 </button>
         <button
   className="btn-ghost"
   type="button"
-  onClick={onEmployeeRegister}
+  onClick={() => navigate(PATHS.REGISTER)}
 >
   <span>👤</span> Créer un compte
 </button>

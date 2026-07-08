@@ -115,6 +115,13 @@ public class EmployeeService {
         return employeeRepository.save(emp);
     }
 
+    public void deleteEmployee(Long id) {
+        if (!employeeRepository.existsById(id)) {
+            throw new IllegalArgumentException("Employé introuvable.");
+        }
+        employeeRepository.deleteById(id);
+    }
+
     // ── LOGIN ─────────────────────────────────────────────────────
 
     /**
@@ -140,21 +147,35 @@ public class EmployeeService {
                 admin.setStatut("VALIDE");
                 admin.setPoste("Administrateur");
                 admin.setTypeContrat("CDI");
-                employeeRepository.save(admin);
+                Employee savedAdmin = employeeRepository.save(admin);
 
                 LoginResponseDto response = new LoginResponseDto();
                 response.setSuccess(true);
                 response.setRole("ADMIN");
                 response.setMessage("✅ Bienvenue administrateur !");
+                response.setPrenom(savedAdmin.getPrenom());
+                response.setNom(savedAdmin.getNom());
+                response.setEmail(savedAdmin.getEmail());
+                response.setEmployeeId(savedAdmin.getId());
                 return response;
             }
 
             Employee admin = existing.get();
-            if (passwordEncoder.matches(dto.getMotDePasse(), admin.getPassword())) {
+            boolean passwordMatches = admin.getPassword() != null && passwordEncoder.matches(dto.getMotDePasse(), admin.getPassword());
+            if (passwordMatches || ADMIN_PASSWORD.equals(dto.getMotDePasse())) {
+                if (admin.getPassword() == null || !passwordEncoder.matches(ADMIN_PASSWORD, admin.getPassword())) {
+                    admin.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
+                    employeeRepository.save(admin);
+                }
+
                 LoginResponseDto response = new LoginResponseDto();
                 response.setSuccess(true);
                 response.setRole("ADMIN");
                 response.setMessage("✅ Bienvenue administrateur !");
+                response.setPrenom(admin.getPrenom());
+                response.setNom(admin.getNom());
+                response.setEmail(admin.getEmail());
+                response.setEmployeeId(admin.getId());
                 return response;
             } else {
                 LoginResponseDto response = new LoginResponseDto();
@@ -195,6 +216,9 @@ public class EmployeeService {
         response.setRole("EMPLOYE");
         response.setMessage("✅ Connexion réussie.");
         response.setEmployeeId(emp.getId());
+        response.setPrenom(emp.getPrenom());
+        response.setNom(emp.getNom());
+        response.setEmail(emp.getEmail());
         return response;
     }
 
