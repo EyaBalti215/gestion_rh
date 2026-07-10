@@ -11,6 +11,8 @@
   flex-direction: column;
   justify-content: flex-start;
   padding: 28px 20px;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .brand-sidebar {
@@ -46,6 +48,27 @@
   display: grid;
   gap: 10px;
   margin-top: 18px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  max-height: calc(100vh - 280px);
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .sidebar-link {

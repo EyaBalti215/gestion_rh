@@ -23,3 +23,24 @@ CREATE TABLE IF NOT EXISTS employees (
     statut          ENUM('EN_ATTENTE', 'VALIDE', 'REJETE') DEFAULT 'EN_ATTENTE',
     created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS services (
+    id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nom                     VARCHAR(255) NOT NULL,
+    type                    VARCHAR(100) NOT NULL,
+    prix                    DOUBLE NOT NULL,
+    periodicite             VARCHAR(50) NOT NULL,
+    date_renouvellement     DATE,
+    statut                  VARCHAR(50) DEFAULT 'Actif'
+);
+
+CREATE TABLE IF NOT EXISTS fournisseurs (
+    id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nom                     VARCHAR(255) NOT NULL,
+    type                    VARCHAR(100) NOT NULL,
+    email                   VARCHAR(255) UNIQUE,
+    telephone               VARCHAR(30),
+    adresse                 VARCHAR(255),
+    statut                  VARCHAR(50) DEFAULT 'Actif',
+    date_creation           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -4,6 +4,9 @@ import Inscriptions from './Inscriptions';
 import AdminPointage from './AdminPointage';
 import AdminCongesPage from './AdminCongesPage';
 import AdminEmployees from './AdminEmployees';
+import AdminServices from './AdminServices';
+import AdminFournisseurs from './AdminFournisseurs';
+import AdminNotifications from './AdminNotifications';
 
 const sidebarItems = [
 	{ key: 'dashboard', label: 'Tableau de bord', icon: '📊' },
@@ -11,6 +14,12 @@ const sidebarItems = [
 	{ key: 'inscriptions', label: 'Inscriptions', icon: '📝', badge: '3' },
 	{ key: 'pointage', label: 'Pointage', icon: '⏱️' },
 	{ key: 'conges', label: 'Congés & Absences', icon: '🏖️' },
+	{ key: 'paie', label: 'Paie & Salaires', icon: '💰' },
+	{ key: 'services', label: 'Services & Factures', icon: '📋' },
+	{ key: 'fournisseurs', label: 'Fournisseurs', icon: '🚚' },
+	{ key: 'finance', label: 'Finance & Rapports', icon: '📈' },
+	{ key: 'notifications', label: 'Notifications', icon: '🔔', badge: '4' },
+	{ key: 'systeme', label: 'Admin Système', icon: '⚙️' },
 ];
 
 const cards = [
@@ -112,6 +121,12 @@ export default function AdminDashboard({ user, onLogout }) {
 									<AdminPointage />
 								) : activePage === 'conges' ? (
 									<AdminCongesPage />
+								) : activePage === 'services' ? (
+									<AdminServices />
+								) : activePage === 'fournisseurs' ? (
+									<AdminFournisseurs />
+								) : activePage === 'notifications' ? (
+									<AdminNotifications />
 								) : (
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: '#9ca3af', fontSize: '1rem' }}>
 						Section « {sidebarItems.find((i) => i.key === activePage)?.label} » — en cours de développement
