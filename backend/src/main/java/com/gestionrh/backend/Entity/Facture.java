@@ -33,6 +33,9 @@ public class Facture {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "pdf_path")
+    private String pdfPath;
+
     public Facture() {}
 
     public Facture(String numero, Service service, Double montant, LocalDate date, String statut, String description) {
@@ -68,4 +71,7 @@ public class Facture {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getPdfPath() { return pdfPath; }
+    public void setPdfPath(String pdfPath) { this.pdfPath = pdfPath; }
 }

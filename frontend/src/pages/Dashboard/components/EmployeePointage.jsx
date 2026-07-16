@@ -110,11 +110,52 @@ export default function EmployeePointage() {
     }
   };
 
+  const parseTimeValue = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+
+    if (typeof value === 'string') {
+      const timeOnly = value.match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
+      if (timeOnly) {
+        const date = new Date();
+        date.setHours(parseInt(timeOnly[1], 10), parseInt(timeOnly[2], 10), timeOnly[3] ? parseInt(timeOnly[3], 10) : 0, 0);
+        return date;
+      }
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) return parsed;
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      const [hour, minute, second] = value;
+      const date = new Date();
+      date.setHours(hour ?? 0, minute ?? 0, second ?? 0, 0);
+      return date;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      const hour = value.hour ?? value.hours ?? null;
+      const minute = value.minute ?? value.minutes ?? 0;
+      const second = value.second ?? value.seconds ?? 0;
+      if (hour != null) {
+        const date = new Date();
+        date.setHours(hour, minute, second, 0);
+        return date;
+      }
+    }
+
+    if (typeof value === 'number') {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) return date;
+    }
+
+    return null;
+  };
+
   const formatTime = (timeStr) => {
-    if (!timeStr) return '--:--';
-    const date = new Date(timeStr);
-    if (isNaN(date.getTime())) return '--:--';
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const parsed = parseTimeValue(timeStr);
+    if (!parsed) return '--:--';
+    return parsed.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
   const date = time.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { apiFetch } from '../../../services/api';
+import { apiFetch, API_BASE_URL } from '../../../services/api';
 import './AdminServices.css';
 
 export default function AdminServices() {
   const [services, setServices] = useState([]);
   const [factures, setFactures] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [facturesLoading, setFacturesLoading] = useState(false);
+  const [facturesError, setFacturesError] = useState(null);
   const [activeTab, setActiveTab] = useState('services');
   const [showNewModal, setShowNewModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -25,32 +27,42 @@ export default function AdminServices() {
     date: new Date().toISOString().split('T')[0],
     statut: 'Payée',
     description: '',
+    pdf: null,
   });
 
   const loadServices = async () => {
-    setLoading(true);
+    setServicesLoading(true);
     try {
       const res = await apiFetch('/services');
-      if (!res.ok) throw new Error('Failed to load');
+      if (!res.ok) throw new Error('Impossible de charger les services');
       const data = await res.json();
       setServices(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
       setServices([]);
     } finally {
-      setLoading(false);
+      setServicesLoading(false);
     }
   };
 
   const loadFactures = async () => {
+    setFacturesError(null);
+    setFacturesLoading(true);
     try {
       const res = await apiFetch('/factures');
-      if (!res.ok) throw new Error('Failed to load');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        const errorMessage = errorData?.error || 'Impossible de charger les factures';
+        throw new Error(errorMessage);
+      }
       const data = await res.json();
       setFactures(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
       setFactures([]);
+      setFacturesError(e.message);
+    } finally {
+      setFacturesLoading(false);
     }
   };
 
@@ -104,21 +116,23 @@ export default function AdminServices() {
     }
 
     try {
-      const payload = {
-        numero: factureForm.numero,
-        service: { id: parseInt(factureForm.serviceId) },
-        montant: parseFloat(factureForm.montant),
-        date: factureForm.date,
-        statut: factureForm.statut,
-        description: factureForm.description,
-      };
-
       const url = editingId && modalType === 'facture' ? `/factures/${editingId}` : '/factures';
       const method = editingId && modalType === 'facture' ? 'PUT' : 'POST';
 
+      const formData = new FormData();
+      formData.append('numero', factureForm.numero);
+      formData.append('serviceId', factureForm.serviceId);
+      formData.append('montant', factureForm.montant);
+      formData.append('date', factureForm.date);
+      formData.append('statut', factureForm.statut);
+      formData.append('description', factureForm.description || '');
+      if (factureForm.pdf) {
+        formData.append('pdf', factureForm.pdf);
+      }
+
       const res = await apiFetch(url, {
         method,
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       if (!res.ok) {
@@ -137,11 +151,22 @@ export default function AdminServices() {
         date: new Date().toISOString().split('T')[0],
         statut: 'Payée',
         description: '',
+        pdf: null,
       });
     } catch (e) {
       console.error(e);
       alert('Erreur réseau');
     }
+  };
+
+  const downloadFacturePdf = (facture) => {
+    if (!facture.pdfPath) {
+      alert('Aucun PDF disponible pour cette facture');
+      return;
+    }
+
+    const pdfUrl = `${API_BASE_URL}/factures/${facture.id}/pdf`;
+    window.open(pdfUrl, '_blank');
   };
 
   const handleDeleteService = async (serviceId) => {
@@ -206,6 +231,22 @@ export default function AdminServices() {
       date: facture.date,
       statut: facture.statut,
       description: facture.description || '',
+      pdf: null,
+    });
+    setEditingId(facture.id);
+    setModalType('facture');
+    setShowNewModal(true);
+  };
+
+  const handleImportFacturePdf = (facture) => {
+    setFactureForm({
+      numero: facture.numero,
+      serviceId: facture.service?.id || '',
+      montant: facture.montant,
+      date: facture.date,
+      statut: facture.statut,
+      description: facture.description || '',
+      pdf: null,
     });
     setEditingId(facture.id);
     setModalType('facture');
@@ -303,7 +344,7 @@ export default function AdminServices() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {servicesLoading ? (
                 <tr>
                   <td colSpan="7">Chargement...</td>
                 </tr>
@@ -318,7 +359,7 @@ export default function AdminServices() {
                     <td>{service.type}</td>
                     <td className="price">{service.prix} TND</td>
                     <td>
-                      <span className="badge badge-info">{service.periodicite}</span>
+                      <span className="badge badge-info">{service.periodicite || 'Non défini'}</span>
                     </td>
                     <td>{service.dateRenouvellement || '—'}</td>
                     <td>
@@ -329,7 +370,7 @@ export default function AdminServices() {
                             : 'badge-danger'
                         }`}
                       >
-                        {service.statut}
+                        {service.statut || 'Non défini'}
                       </span>
                     </td>
                     <td className="actions-cell">
@@ -363,36 +404,62 @@ export default function AdminServices() {
               <tr>
                 <th>Numéro</th>
                 <th>Service</th>
+                <th>Périodicité</th>
                 <th>Montant</th>
                 <th>Date</th>
                 <th>Statut</th>
+                <th>PDF</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {facturesLoading ? (
                 <tr>
-                  <td colSpan="6">Chargement...</td>
+                  <td colSpan="8">Chargement...</td>
+                </tr>
+              ) : facturesError ? (
+                <tr>
+                  <td colSpan="8">Erreur : {facturesError}</td>
                 </tr>
               ) : factures.length === 0 ? (
                 <tr>
-                  <td colSpan="6">Aucune facture trouvée</td>
+                  <td colSpan="8">Aucune facture trouvée</td>
                 </tr>
               ) : (
                 factures.map((facture) => (
                   <tr key={facture.id}>
                     <td className="facture-number"><strong>{facture.numero}</strong></td>
-                    <td>{facture.service?.nom || 'N/A'}</td>
-                    <td className="price">{facture.montant.toFixed(2)} TND</td>
-                    <td>{new Date(facture.date).toLocaleDateString('fr-FR')}</td>
+                    <td>{facture.service?.nom || 'Service inconnu'}</td>
+                    <td>{facture.service?.periodicite || 'Non défini'}</td>
+                    <td className="price">{facture.montant != null ? facture.montant.toFixed(2) : '—'} TND</td>
+                    <td>{facture.date ? new Date(facture.date).toLocaleDateString('fr-FR') : '—'}</td>
                     <td>
                       <span className={`badge ${
                         facture.statut === 'Payée' ? 'badge-success' :
                         facture.statut === 'En attente' ? 'badge-warning' :
                         'badge-danger'
                       }`}>
-                        {facture.statut}
+                        {facture.statut || 'Non défini'}
                       </span>
+                    </td>
+                    <td className="pdf-cell">
+                      {facture.pdfPath ? (
+                        <button
+                          className="action-btn download"
+                          onClick={() => downloadFacturePdf(facture)}
+                          title="Télécharger le PDF"
+                        >
+                          📄 PDF
+                        </button>
+                      ) : (
+                        <button
+                          className="action-btn import"
+                          onClick={() => handleImportFacturePdf(facture)}
+                          title="Ajouter le PDF"
+                        >
+                          📤 Ajouter PDF
+                        </button>
+                      )}
                     </td>
                     <td className="actions-cell">
                       <button
@@ -561,6 +628,16 @@ export default function AdminServices() {
                       <option>En attente</option>
                       <option>Annulée</option>
                     </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Importer le PDF de la facture (optionnel)</label>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) => setFactureForm({ ...factureForm, pdf: e.target.files[0] || null })}
+                    />
+                    <small>Si vous ne fournissez pas de fichier, le système générera automatiquement un PDF à partir des données de la facture.</small>
                   </div>
 
                   <div className="form-group">

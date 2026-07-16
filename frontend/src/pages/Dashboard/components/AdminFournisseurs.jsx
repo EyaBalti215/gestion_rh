@@ -12,6 +12,8 @@ export default function AdminFournisseurs() {
   const [modalType, setModalType] = useState('fournisseur'); // 'fournisseur' ou 'charge'
   const [showChargesModal, setShowChargesModal] = useState(false);
   const [selectedFournisseur, setSelectedFournisseur] = useState(null);
+  const [selectedFournisseurCharges, setSelectedFournisseurCharges] = useState([]);
+  const [selectedFournisseurChargesLoading, setSelectedFournisseurChargesLoading] = useState(false);
   const [form, setForm] = useState({
     nom: '',
     type: '',
@@ -42,12 +44,19 @@ export default function AdminFournisseurs() {
     }
   };
 
+  const isInvalidAmazonCharge = (charge) => {
+    const designation = charge.designation || '';
+    const fournisseurName = charge.fournisseur?.nom || '';
+    return /amazon/i.test(designation) || /amazon/i.test(fournisseurName);
+  };
+
   const loadCharges = async () => {
     try {
       const res = await apiFetch('/charges');
       if (!res.ok) throw new Error('Failed to load');
       const data = await res.json();
-      setCharges(Array.isArray(data) ? data : []);
+      const chargesList = Array.isArray(data) ? data.filter((charge) => !isInvalidAmazonCharge(charge)) : [];
+      setCharges(chargesList);
     } catch (e) {
       console.error(e);
       setCharges([]);
@@ -204,9 +213,32 @@ export default function AdminFournisseurs() {
     setShowNewModal(true);
   };
 
-  const openChargesModal = (fournisseur) => {
+  const loadChargesByFournisseur = async (fournisseurId) => {
+    setSelectedFournisseurChargesLoading(true);
+    try {
+      const res = await apiFetch(`/charges/fournisseur/${fournisseurId}`);
+      if (!res.ok) throw new Error('Impossible de charger les charges du fournisseur');
+      const data = await res.json();
+      const chargesList = Array.isArray(data) ? data.filter((charge) => !isInvalidAmazonCharge(charge)) : [];
+      setSelectedFournisseurCharges(chargesList);
+    } catch (e) {
+      console.error(e);
+      setSelectedFournisseurCharges([]);
+    } finally {
+      setSelectedFournisseurChargesLoading(false);
+    }
+  };
+
+  const openChargesModal = async (fournisseur) => {
     setSelectedFournisseur(fournisseur);
+    await loadChargesByFournisseur(fournisseur.id);
     setShowChargesModal(true);
+  };
+
+  const closeChargesModal = () => {
+    setShowChargesModal(false);
+    setSelectedFournisseur(null);
+    setSelectedFournisseurCharges([]);
   };
 
   const getTypeIcon = (type) => {
@@ -340,6 +372,13 @@ export default function AdminFournisseurs() {
                       title="Modifier"
                     >
                       ✏️ Modifier
+                    </button>
+                    <button
+                      className="action-btn delete"
+                      onClick={() => handleDeleteFournisseur(fournisseur.id)}
+                      title="Supprimer"
+                    >
+                      🗑️ Supprimer
                     </button>
                   </div>
                 </div>
@@ -550,7 +589,7 @@ export default function AdminFournisseurs() {
       )}
 
       {showChargesModal && selectedFournisseur && (
-        <div className="modal-overlay" onClick={() => setShowChargesModal(false)}>
+        <div className="modal-overlay" onClick={closeChargesModal}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Charges - {selectedFournisseur.nom}</h2>
@@ -571,42 +610,30 @@ export default function AdminFournisseurs() {
                       <th>Statut</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr>
-                      <td>Fournitures de bureau (Juin)</td>
-                      <td>{selectedFournisseur.nom}</td>
-                      <td className="amount">380 TND</td>
-                      <td>2026-06-08</td>
-                      <td><span className="badge badge-success">Payée</span></td>
-                    </tr>
-                    <tr>
-                      <td>Abonnement Téléphonique Pro</td>
-                      <td>{selectedFournisseur.nom}</td>
-                      <td className="amount">156 TND</td>
-                      <td>2026-06-01</td>
-                      <td><span className="badge badge-success">Payée</span></td>
-                    </tr>
-                    <tr>
-                      <td>Loyer Local Commercial</td>
-                      <td>{selectedFournisseur.nom}</td>
-                      <td className="amount">2200 TND</td>
-                      <td>2026-06-05</td>
-                      <td><span className="badge badge-success">Payée</span></td>
-                    </tr>
-                    <tr>
-                      <td>Facture Électricité Juin</td>
-                      <td>{selectedFournisseur.nom}</td>
-                      <td className="amount">245 TND</td>
-                      <td>2026-06-12</td>
-                      <td><span className="badge badge-warning">En attente</span></td>
-                    </tr>
-                    <tr>
-                      <td>Fournitures consommables</td>
-                      <td>{selectedFournisseur.nom}</td>
-                      <td className="amount">125 TND</td>
-                      <td>2026-06-18</td>
-                      <td><span className="badge badge-success">Payée</span></td>
-                    </tr>
+                    <tbody>
+                    {selectedFournisseurChargesLoading ? (
+                      <tr>
+                        <td colSpan="5">Chargement des charges...</td>
+                      </tr>
+                    ) : selectedFournisseurCharges.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="no-data">Aucune charge trouvée pour ce fournisseur</td>
+                      </tr>
+                    ) : (
+                      selectedFournisseurCharges.map((charge) => (
+                        <tr key={charge.id}>
+                          <td><strong>{charge.designation}</strong></td>
+                          <td>{charge.fournisseur?.nom || selectedFournisseur.nom}</td>
+                          <td className="amount">{charge.montant != null ? `${charge.montant.toFixed(2)} TND` : '—'}</td>
+                          <td>{charge.date || '—'}</td>
+                          <td>
+                            <span className={`badge ${charge.statut === 'Payée' ? 'badge-success' : 'badge-warning'}`}>
+                              {charge.statut || 'Non défini'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

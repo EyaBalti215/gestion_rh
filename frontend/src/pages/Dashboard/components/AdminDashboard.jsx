@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { apiFetch } from '../../../services/api';
 import './AdminDashboard.css';
 import Inscriptions from './Inscriptions';
 import AdminPointage from './AdminPointage';
@@ -7,9 +8,11 @@ import AdminEmployees from './AdminEmployees';
 import AdminServices from './AdminServices';
 import AdminFournisseurs from './AdminFournisseurs';
 import AdminNotifications from './AdminNotifications';
+import Profile from './Profile';
 
 const sidebarItems = [
 	{ key: 'dashboard', label: 'Tableau de bord', icon: '📊' },
+	{ key: 'profil', label: 'Mon profil', icon: '👤' },
 	{ key: 'employes', label: 'Employés & RH', icon: '👥' },
 	{ key: 'inscriptions', label: 'Inscriptions', icon: '📝', badge: '3' },
 	{ key: 'pointage', label: 'Pointage', icon: '⏱️' },
@@ -18,7 +21,7 @@ const sidebarItems = [
 	{ key: 'services', label: 'Services & Factures', icon: '📋' },
 	{ key: 'fournisseurs', label: 'Fournisseurs', icon: '🚚' },
 	{ key: 'finance', label: 'Finance & Rapports', icon: '📈' },
-	{ key: 'notifications', label: 'Notifications', icon: '🔔', badge: '4' },
+	{ key: 'notifications', label: 'Notifications', icon: '🔔' },
 	{ key: 'systeme', label: 'Admin Système', icon: '⚙️' },
 ];
 
@@ -31,6 +34,31 @@ const cards = [
 
 export default function AdminDashboard({ user, onLogout }) {
 	const [activePage, setActivePage] = useState('inscriptions');
+	const [notificationCount, setNotificationCount] = useState(0);
+
+	const handleNotificationsClick = () => {
+		setActivePage('notifications');
+	};
+
+	useEffect(() => {
+		const fetchNotificationCount = async () => {
+			try {
+				const res = await apiFetch('/notifications');
+				if (!res.ok) return;
+				const data = await res.json();
+				const unread = Array.isArray(data)
+					? data.filter((notif) => !notif.lu).length
+					: 0;
+				setNotificationCount(unread);
+			} catch (e) {
+				console.error(e);
+			}
+		};
+
+		fetchNotificationCount();
+		const interval = setInterval(fetchNotificationCount, 30000);
+		return () => clearInterval(interval);
+	}, []);
 
 	return (
 		<div className="admin-app">
@@ -52,7 +80,13 @@ export default function AdminDashboard({ user, onLogout }) {
 						>
 							<span className="sidebar-icon">{item.icon}</span>
 							<span>{item.label}</span>
-							{item.badge && <span className="sidebar-badge">{item.badge}</span>}
+							{item.key === 'notifications' ? (
+								notificationCount > 0 ? (
+									<span className="sidebar-badge">{notificationCount}</span>
+								) : null
+							) : item.badge ? (
+								<span className="sidebar-badge">{item.badge}</span>
+							) : null}
 						</button>
 					))}
 				</nav>
@@ -76,7 +110,10 @@ export default function AdminDashboard({ user, onLogout }) {
 						<input type="search" placeholder="Rechercher..." />
 					</div>
 					<div className="topbar-actions">
-						<button className="icon-button">🔔<span className="badge">4</span></button>
+						<button className="icon-button" onClick={handleNotificationsClick}>
+							🔔
+							{notificationCount > 0 && <span className="badge">{notificationCount}</span>}
+						</button>
 						<div className="user-badge">AD</div>
 					</div>
 				</header>
@@ -113,6 +150,8 @@ export default function AdminDashboard({ user, onLogout }) {
 							</div>
 						</section>
 					</>
+								) : activePage === 'profil' ? (
+									<Profile />
 								) : activePage === 'employes' ? (
 									<AdminEmployees />
 								) : activePage === 'inscriptions' ? (

@@ -123,7 +123,7 @@ export default function AdminNotifications() {
         <h2>
           <span className="notif-icon">🔔</span>
           Notifications
-          {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+          <span className="notif-badge">{unreadCount}</span>
         </h2>
         {unreadCount > 0 && (
           <button className="btn-mark-all" onClick={handleMarkAllAsRead}>

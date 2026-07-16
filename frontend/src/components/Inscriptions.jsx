@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { apiFetch } from '../services/api';
 import '../pages/Dashboard/components/Inscriptions.css';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
-
 export default function Inscriptions() {
   const [allEmployees, setAllEmployees] = useState([]);
   const [pending, setPending] = useState([]);
@@ -40,7 +38,7 @@ export default function Inscriptions() {
   const setStatus = async (id, status) => {
     try {
       const endpoint = status === 'approved' ? 'valider' : 'refuser';
-      const res = await fetch(`${API_BASE}/employees/${id}/${endpoint}`, { method: 'PUT' });
+      const res = await apiFetch(`/employees/${id}/${endpoint}`, { method: 'PUT' });
       if (!res.ok) throw new Error('Erreur serveur');
       await load();
     } catch (e) {
@@ -109,6 +107,9 @@ export default function Inscriptions() {
                     <div className="insc-date">
                       <span className="insc-date-label">Soumis le</span>
                       <strong className="insc-date-value">{new Date(it.createdAt || it.date || Date.now()).toLocaleDateString('fr-FR')}</strong>
+                      <span className={`insc-pill status ${['VALIDE', 'VALIDÉ', 'VALIDÉE', 'Approuvée', 'Valide', 'approved'].includes(it.statut) ? 'approved' : ['REJETE', 'REFUSE', 'REFUSÉ', 'Refusée', 'Refusé', 'rejected'].includes(it.statut) ? 'refused' : 'pending'}`}>
+                        {normalizeStatus(it.statut || it.status)}
+                      </span>
                     </div>
                     <div className="insc-actions">
                       <button className="btn-voir">Voir</button>

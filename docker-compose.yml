@@ -54,6 +54,8 @@ services:
       SPRING_MAIL_STARTTLS_REQUIRED: ${SPRING_MAIL_STARTTLS_REQUIRED:-true}
     ports:
       - "${SPRING_PORT:-8080}:8080"
+    volumes:
+      - ./backend/uploads:/app/uploads
 
   frontend:
     build:

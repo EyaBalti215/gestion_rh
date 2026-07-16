@@ -3,7 +3,12 @@ export const API_BASE_URL = rawApiBaseUrl.replace(/\/$/, '');
 const AUTH_STORAGE_KEY = 'gestion-rh-auth';
 
 function buildUrl(path) {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  let normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  if (normalizedPath.startsWith(`${API_BASE_URL}/`)) {
+    normalizedPath = normalizedPath.substring(API_BASE_URL.length);
+  }
+
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
@@ -22,9 +27,12 @@ export async function apiFetch(path, options = {}) {
   }
   
   const headers = {
-    'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
+
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // Ajouter le token s'il existe
   if (token) {

@@ -4,10 +4,12 @@ import com.gestionrh.backend.dto.Apiresponsedto;
 import com.gestionrh.backend.dto.PointageResponseDto;
 import com.gestionrh.backend.service.PointageService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pointage")
@@ -51,5 +53,13 @@ public class PointageController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         LocalDate d = (date != null) ? date : LocalDate.now();
         return pointageService.getRegistreDuJour(d);
+    }
+
+    @PutMapping("/registre/{employeeId}/statut")
+    public ResponseEntity<PointageResponseDto> updateRegistreStatut(
+            @PathVariable Long employeeId,
+            @RequestBody Map<String, String> payload) {
+        String statut = payload.get("statut");
+        return ResponseEntity.ok(pointageService.modifierStatutPointage(employeeId, statut));
     }
 }

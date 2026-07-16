@@ -117,6 +117,52 @@ public class PointageService {
         }).collect(Collectors.toList());
     }
 
+    public PointageResponseDto modifierStatutPointage(Long employeeId, String statutValue) {
+        PointageStatut statut;
+        try {
+            statut = PointageStatut.valueOf(statutValue.toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Statut invalide");
+        }
+
+        LocalDate today = LocalDate.now();
+        Optional<Pointage> existant = pointageRepository.findByEmployeeIdAndDatePointage(employeeId, today);
+
+        if (statut == PointageStatut.ABSENT) {
+            if (existant.isPresent()) {
+                pointageRepository.delete(existant.get());
+            }
+            Employee employee = employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new RuntimeException("Employé introuvable"));
+            return new PointageResponseDto(
+                    null, employee.getId(), employee.getNom(), employee.getPrenom(),
+                    today, null, null, null, PointageStatut.ABSENT
+            );
+        }
+
+        Pointage pointage;
+        if (existant.isPresent()) {
+            pointage = existant.get();
+        } else {
+            Employee employee = employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new RuntimeException("Employé introuvable"));
+            pointage = new Pointage();
+            pointage.setEmployee(employee);
+            pointage.setDatePointage(today);
+        }
+
+        LocalTime now = LocalTime.now();
+        if (pointage.getHeureEntree() == null) {
+            pointage.setHeureEntree(now);
+        }
+        if (pointage.getHeureSortie() == null) {
+            pointage.setHeureSortie(now);
+        }
+        pointage.setStatut(PointageStatut.PRESENT);
+
+        return toDto(pointageRepository.save(pointage));
+    }
+
     // ----- Conversion Entity -> DTO avec calcul du total d'heures -----
     private PointageResponseDto toDto(Pointage p) {
         Double total = null;

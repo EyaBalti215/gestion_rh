@@ -1,0 +1,5 @@
+2026-07-10T14:39:27.733Z  WARN 1 --- [gestion-rh-backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-10T14:39:36.141Z  WARN 1 --- [gestion-rh-backend] [           main] .s.s.UserDetailsServiceAutoConfiguration : 
+2026-07-10T14:58:55.021Z  WARN 1 --- [gestion-rh-backend] [nio-8080-exec-2] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotReadableException: JSON parse error: Unexpected character ('n' (code 110)): was expecting double-quote to start field name]
+2026-07-10T15:02:54.059Z  WARN 1 --- [gestion-rh-backend] [nio-8080-exec-5] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 1048, SQLState: 23000
+2026-07-10T15:02:54.060Z ERROR 1 --- [gestion-rh-backend] [nio-8080-exec-5] o.h.engine.jdbc.spi.SqlExceptionHelper   : Column 'periodicite' cannot be null

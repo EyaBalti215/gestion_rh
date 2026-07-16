@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './EmployeeDashboard.css';
 import EmployeePointage from './EmployeePointage';
 import MesConges from './MesConges';
+import Profile from './Profile';
 
 const sidebarItems = [
 	{ key: 'dashboard', label: 'Mon tableau de bord', icon: '📊', active: true },
@@ -95,6 +96,8 @@ export default function EmployeeDashboard({ user, onLogout }) {
 							</div>
 						</div>
 					</>
+				) : activePage === 'profil' ? (
+					<Profile />
 				) : activePage === 'pointage' ? (
 					<EmployeePointage />
 				) : activePage === 'conges' ? (

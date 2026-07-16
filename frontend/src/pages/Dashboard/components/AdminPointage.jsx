@@ -5,6 +5,9 @@ export default function AdminPointage() {
   const [pointages, setPointages] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedPointage, setSelectedPointage] = useState(null);
+  const [newStatus, setNewStatus] = useState('PRESENT');
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   const loadPointages = async () => {
@@ -49,21 +52,45 @@ export default function AdminPointage() {
   }, []);
 
   // Statistiques du jour
-  const presentsCount = pointages.filter((p) => p.sortie).length;
-  const absentsCount = employees.length - pointages.length;
+  const presentsCount = pointages.filter((p) => p.entree && p.sortie).length;
+  const absentsCount = pointages.filter((p) => !p.entree).length;
   const onLeaveCount = 0;
 
+  const parseTimeValue = (value) => {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+
+    if (typeof value === 'string') {
+      const timeOnly = value.match(/^(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?$/);
+      if (timeOnly) {
+        const date = new Date();
+        date.setHours(parseInt(timeOnly[1], 10), parseInt(timeOnly[2], 10), timeOnly[3] ? parseInt(timeOnly[3], 10) : 0, 0);
+        return date;
+      }
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+
+    if (typeof value === 'number') {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) return date;
+    }
+
+    return null;
+  };
+
   const formatTime = (time) => {
-    if (!time) return '—';
-    const date = new Date(time);
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const parsed = parseTimeValue(time);
+    if (!parsed) return '—';
+    return parsed.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
 
   const calculateTotal = (entree, sortie) => {
-    if (!entree || !sortie) return '—';
-    const start = new Date(entree);
-    const end = new Date(sortie);
-    const diffMs = end - start;
+    const start = parseTimeValue(entree);
+    const end = parseTimeValue(sortie);
+    if (!start || !end) return '—';
+    const diffMs = end.getTime() - start.getTime();
+    if (diffMs <= 0) return '—';
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${hours}h${minutes > 0 ? minutes : ''}`;
@@ -94,6 +121,33 @@ export default function AdminPointage() {
     const prenom = pointage.employee?.prenom ?? pointage.prenom;
     const nom = pointage.employee?.nom ?? pointage.nom;
     return `${prenom?.[0]?.toUpperCase() || ''}${nom?.[0]?.toUpperCase() || ''}`;
+  };
+
+  const openEditModal = (pointage) => {
+    setSelectedPointage(pointage);
+    setNewStatus(pointage.statut === 'ABSENT' ? 'ABSENT' : 'PRESENT');
+    setShowEditModal(true);
+  };
+
+  const handleSaveStatus = async () => {
+    if (!selectedPointage) return;
+    try {
+      const res = await apiFetch(`/pointage/registre/${selectedPointage.employeeId}/statut`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut: newStatus }),
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || 'Erreur de mise à jour');
+      }
+      await loadPointages();
+      setShowEditModal(false);
+      setSelectedPointage(null);
+    } catch (e) {
+      console.error(e);
+      alert('Impossible de modifier le statut : ' + e.message);
+    }
   };
 
   return (
@@ -203,8 +257,9 @@ export default function AdminPointage() {
                           fontSize: '0.875rem',
                           fontWeight: '500',
                         }}
+                        onClick={() => openEditModal(p)}
                       >
-                        ✏️ Ajuster
+                        ✏️ Modifier
                       </button>
                     </td>
                   </tr>
@@ -212,6 +267,65 @@ export default function AdminPointage() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {showEditModal && selectedPointage && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowEditModal(false)}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '1rem',
+              padding: '1.5rem',
+              width: '100%',
+              maxWidth: '420px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ marginTop: 0, color: '#0f172a' }}>Modifier le statut</h3>
+            <p style={{ color: '#475569' }}>
+              {selectedPointage.prenom || selectedPointage.employee?.prenom} {selectedPointage.nom || selectedPointage.employee?.nom}
+            </p>
+            <div style={{ display: 'grid', gap: '1rem', marginTop: '1rem' }}>
+              <label style={{ display: 'grid', gap: '0.5rem', fontWeight: 600 }}>
+                Statut
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  style={{ padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid #d1d5db' }}
+                >
+                  <option value="PRESENT">Présent</option>
+                  <option value="ABSENT">Absent</option>
+                </select>
+              </label>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  style={{ padding: '0.75rem 1rem', border: 'none', borderRadius: '0.75rem', background: '#f3f4f6', color: '#0f172a', cursor: 'pointer' }}
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Annuler
+                </button>
+                <button
+                  style={{ padding: '0.75rem 1rem', border: 'none', borderRadius: '0.75rem', background: '#4338ca', color: '#fff', cursor: 'pointer' }}
+                  onClick={handleSaveStatus}
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

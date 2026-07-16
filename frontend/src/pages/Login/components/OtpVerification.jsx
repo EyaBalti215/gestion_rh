@@ -141,13 +141,15 @@ export default function OtpVerification({ email, onBack, onVerified }) {
         </button>
 
         <div className="otp-icon-wrap">
-          <span className="otp-icon">🛡️</span>
+          <span className="otp-icon">�</span>
         </div>
 
-        <h1 className="otp-title">Code de vérification <span aria-hidden="true">✉️</span></h1>
+        <h1 className="otp-title">Réinitialisation de mot de passe</h1>
         <p className="otp-subtitle">
-          Un code a été envoyé à<br />
-          <span className="otp-email">{email}</span>
+          Vous avez demandé la réinitialisation de votre mot de passe. Voici votre code de vérification à 6 chiffres :
+        </p>
+        <p className="otp-email">
+          {email}
         </p>
 
         {/* 6 cases individuelles */}

@@ -1,6 +1,7 @@
 package com.gestionrh.backend.Entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,6 +24,15 @@ public class Employee {
     private String typeContrat;
     private String modeReglement;
     private String rib;
+
+    private String departement;
+
+    /** rôle simple stocké en String : ADMIN ou EMPLOYEE */
+    private String role;
+
+    private LocalDate dateEmbauche;
+
+    private String photoUrl;
 
     @Column(unique = true)
     private String login;
@@ -72,6 +82,18 @@ public class Employee {
 
     public String getRib() { return rib; }
     public void setRib(String rib) { this.rib = rib; }
+
+    public String getDepartement() { return departement; }
+    public void setDepartement(String departement) { this.departement = departement; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+
+    public LocalDate getDateEmbauche() { return dateEmbauche; }
+    public void setDateEmbauche(LocalDate dateEmbauche) { this.dateEmbauche = dateEmbauche; }
+
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
 
     public String getLogin() { return login; }
     public void setLogin(String login) { this.login = login; }

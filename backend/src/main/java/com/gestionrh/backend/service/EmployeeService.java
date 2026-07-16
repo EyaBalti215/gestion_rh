@@ -3,6 +3,8 @@ package com.gestionrh.backend.service;
 import com.gestionrh.backend.Entity.Employee;
 import com.gestionrh.backend.Repository.EmployeeRepository;
 import com.gestionrh.backend.dto.ChangePasswordDto;
+import com.gestionrh.backend.dto.ProfileUpdateDto;
+import com.gestionrh.backend.service.NotificationService;
 import com.gestionrh.backend.dto.EmployeeRequestDto;
 import com.gestionrh.backend.dto.LoginResponseDto;
 import com.gestionrh.backend.dto.Loginrequestdto;
@@ -23,6 +25,9 @@ public class EmployeeService {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Autowired
+    private NotificationService notificationService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -59,6 +64,11 @@ public class EmployeeService {
 
         Employee saved = employeeRepository.save(emp);
         sendCredentialsEmail(saved.getEmail(), saved.getPrenom(), saved.getLogin(), rawPassword);
+        notificationService.createNotification(
+                "Nouvelle inscription",
+                saved.getPrenom() + " " + saved.getNom() + " a demandé un accès à la plateforme.",
+                "inscriptions"
+        );
 
         return saved;
     }
@@ -105,14 +115,26 @@ public class EmployeeService {
         Employee emp = employeeRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Employé introuvable."));
         emp.setStatut("VALIDE");
-        return employeeRepository.save(emp);
+        Employee updated = employeeRepository.save(emp);
+        notificationService.createNotification(
+                "Inscription validée",
+                emp.getPrenom() + " " + emp.getNom() + " a été validé(e) avec succès.",
+                "inscriptions"
+        );
+        return updated;
     }
 
     public Employee refuser(Long id) {
         Employee emp = employeeRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Employé introuvable."));
         emp.setStatut("REJETE");
-        return employeeRepository.save(emp);
+        Employee updated = employeeRepository.save(emp);
+        notificationService.createNotification(
+                "Inscription refusée",
+                emp.getPrenom() + " " + emp.getNom() + " a vu sa demande refusée.",
+                "inscriptions"
+        );
+        return updated;
     }
 
     public void deleteEmployee(Long id) {
@@ -279,5 +301,24 @@ public class EmployeeService {
         } catch (Exception e) {
             System.err.println("⚠️ Échec envoi email à " + to + " : " + e.getMessage());
         }
+    }
+
+    // ── Profile helpers ─────────────────────────────────────────
+    public Employee findByEmail(String email) {
+        return employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Employé introuvable : " + email));
+    }
+
+    public Employee updateProfile(String email, ProfileUpdateDto dto) {
+        Employee employee = findByEmail(email);
+
+        if (dto.getTelephone() != null) {
+            employee.setTelephone(dto.getTelephone());
+        }
+        if (dto.getAdresse() != null) {
+            employee.setAdresse(dto.getAdresse());
+        }
+
+        return employeeRepository.save(employee);
     }
 }

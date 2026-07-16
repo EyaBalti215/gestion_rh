@@ -7,6 +7,7 @@ import com.gestionrh.backend.dto.CongeResponseDto;
 import com.gestionrh.backend.Entity.Conge;
 import com.gestionrh.backend.Entity.CongeStatut;
 import com.gestionrh.backend.Entity.Employee;
+import com.gestionrh.backend.service.NotificationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +22,12 @@ public class CongeService {
 
     private final CongeRepository congeRepository;
     private final EmployeeRepository employeeRepository;
+    private final NotificationService notificationService;
 
-    public CongeService(CongeRepository congeRepository, EmployeeRepository employeeRepository) {
+    public CongeService(CongeRepository congeRepository, EmployeeRepository employeeRepository, NotificationService notificationService) {
         this.congeRepository = congeRepository;
         this.employeeRepository = employeeRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -48,6 +51,11 @@ public class CongeService {
         conge.setStatut(CongeStatut.EN_ATTENTE);
 
         Conge saved = congeRepository.save(conge);
+        notificationService.createNotification(
+                "Nouvelle demande de congé",
+                employee.getPrenom() + " " + employee.getNom() + " a soumis une demande de congé.",
+                "conges"
+        );
         return CongeResponseDto.fromEntity(saved);
     }
 
@@ -70,7 +78,13 @@ public class CongeService {
         conge.setStatut(CongeStatut.APPROUVE);
         conge.setCommentaireAdmin(commentaire);
         conge.setDateTraitement(LocalDateTime.now());
-        return CongeResponseDto.fromEntity(congeRepository.save(conge));
+        Conge updated = congeRepository.save(conge);
+        notificationService.createNotification(
+                "Demande de congé approuvée",
+                "La demande de " + conge.getEmployee().getPrenom() + " " + conge.getEmployee().getNom() + " a été approuvée.",
+                "conges"
+        );
+        return CongeResponseDto.fromEntity(updated);
     }
 
     @Transactional
@@ -80,6 +94,12 @@ public class CongeService {
         conge.setStatut(CongeStatut.REFUSE);
         conge.setCommentaireAdmin(commentaire);
         conge.setDateTraitement(LocalDateTime.now());
-        return CongeResponseDto.fromEntity(congeRepository.save(conge));
+        Conge updated = congeRepository.save(conge);
+        notificationService.createNotification(
+                "Demande de congé refusée",
+                "La demande de " + conge.getEmployee().getPrenom() + " " + conge.getEmployee().getNom() + " a été refusée.",
+                "conges"
+        );
+        return CongeResponseDto.fromEntity(updated);
     }
 }

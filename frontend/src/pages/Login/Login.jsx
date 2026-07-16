@@ -64,16 +64,6 @@ function LoginForm({ role, onCancel, onForgotPassword, onSubmit }) {
         email: data.email || email.trim().toLowerCase(),
       };
 
-      try {
-        await fetch(`${API_BASE}/password/send-otp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim().toLowerCase() }),
-        });
-      } catch {
-        // Le flux continue même si l'envoi OTP échoue.
-      }
-
       onSubmit({ userData, email: email.trim().toLowerCase() });
     } catch {
       setError('Erreur réseau. Vérifiez que le serveur est démarré.');
@@ -156,10 +146,21 @@ export default function Login() {
   const [otpEmail, setOtpEmail] = useState('');
   const [pendingUser, setPendingUser] = useState(null);
 
-  const handleLoginSuccess = ({ userData, email }) => {
+  const handleLoginSuccess = async ({ userData, email }) => {
+    const nextEmail = email || userData.email || '';
     setPendingUser(userData);
-    setOtpEmail(email || userData.email || '');
+    setOtpEmail(nextEmail);
     setView('otp-login');
+
+    try {
+      await fetch(`${API_BASE}/password/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: nextEmail }),
+      });
+    } catch {
+      // Pas bloquant : l'utilisateur verra la page de saisie et pourra renvoyer le code.
+    }
   };
 
   const handleForgotPassword = (prefillEmail) => {
